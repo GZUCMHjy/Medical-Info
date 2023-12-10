@@ -12,6 +12,8 @@ public class BusinessException extends RuntimeException {
      */
     private final int code;
 
+    private String description;
+
     public BusinessException(int code, String message) {
         super(message);
         this.code = code;
@@ -26,6 +28,9 @@ public class BusinessException extends RuntimeException {
         super(message);
         this.code = errorCode.getCode();
     }
+//    public BusinessException(String description){
+//        this.description = description;
+//    }
 
     public int getCode() {
         return code;
