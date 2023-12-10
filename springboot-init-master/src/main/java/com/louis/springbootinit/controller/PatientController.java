@@ -35,12 +35,12 @@ public class PatientController {
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<Integer> login(@RequestBody PatientLoginVo patient, HttpServletRequest request) {
-        long loginStatus = patientService.Login(patient,request);
-        if(loginStatus != 1){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"登录失败");
-        }
-        return new BaseResponse<>(ErrorCode.SUCCESS);
+    public BaseResponse<String> login(@RequestBody PatientLoginVo patient, HttpServletRequest request) {
+        String loginStatus = patientService.Login(patient,request);
+//        if(loginStatus != 1){
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"登录失败");
+//        }
+        return new BaseResponse<>(200,loginStatus,"token值");
     }
 
     @PostMapping("/register")

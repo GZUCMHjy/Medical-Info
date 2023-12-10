@@ -1,5 +1,6 @@
 package com.louis.springbootinit.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
@@ -10,16 +11,16 @@ import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
 import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
 import com.louis.springbootinit.service.PatientService;
+import com.louis.springbootinit.utils.PatientHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.util.UUID;
 
 /**
  * @author louis
@@ -34,11 +35,12 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     private PatientMapper patientMapper;
     /**
      * 患者登录
+     *
      * @param patient 患者登录信息
      * @return
      */
     @Override
-    public long Login(PatientLoginVo patient, HttpServletRequest request) {
+    public String  Login(PatientLoginVo patient, HttpServletRequest request) {
         // 0. 校验账号密码基本规范
         if(StringUtils.isBlank(patient.getAccount()) || StringUtils.isBlank(patient.getPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
@@ -65,10 +67,17 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         saftyPatient.setAge(loginPatient.getAge());
         saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
         saftyPatient.setGender(loginPatient.getGender());
-        // 4. 单点登录（TODO 采用Redis实现多台服务器的登录）
-        request.getSession().setAttribute(sessionPrefix ,saftyPatient);
+        // 4. 生成token
+        String token = UUID.randomUUID().toString();
+        String tokenKey = token + sessionPrefix;
+        // 5. session存储（TODO 改为Redis存储）
+        request.getSession().setAttribute(tokenKey ,saftyPatient);
+        PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
+        // 6. ThreadLocal存储
+        PatientHolder.savePatient(patientDto);
         log.info("登录成功");
-        return 1;
+        // 7. 返回token
+        return token;
     }
 
     /**
@@ -111,6 +120,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         addPatient.setAvatarUrl("https://get.wallhere.com/photo/YJM-CGI-women-pink-hair-blushing-portrait-looking-at-viewer-2288644.jpg");
         // 返回成功插入的数据
         long res = patientMapper.insert(addPatient);
+
         log.info("注册成功");
         return res;
     }

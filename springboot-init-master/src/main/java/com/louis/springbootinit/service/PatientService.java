@@ -17,7 +17,7 @@ import javax.servlet.http.HttpSession;
  */
 public interface PatientService extends IService<Patient> {
 
-    long Login(PatientLoginVo patient, HttpServletRequest request);
+    String Login(PatientLoginVo patient, HttpServletRequest request);
     long Register(PatientRegisterVo patient);
 
     PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request);
