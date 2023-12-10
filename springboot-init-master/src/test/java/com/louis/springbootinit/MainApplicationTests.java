@@ -1,0 +1,13 @@
+package com.louis.springbootinit;
+
+import org.springframework.boot.test.context.SpringBootTest;
+
+/**
+ * 主类测试
+ 
+ */
+@SpringBootTest
+class MainApplicationTests {
+// 已删测试
+
+}
