@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * MyBatis Plus 配置
+ * MyBatis Plus 分页配置
  */
 @Configuration
 @MapperScan("com.louis.springbootinit.mapper")

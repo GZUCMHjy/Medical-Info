@@ -3,9 +3,9 @@ package com.louis.springbootinit.controller;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
-import com.louis.springbootinit.model.entity.Patient;
-import com.louis.springbootinit.model.vo.pation.PatientLoginVo;
-import com.louis.springbootinit.model.vo.pation.PatientRegisterVo;
+import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
+import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
+import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
 import com.louis.springbootinit.service.PatientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author louis
@@ -33,8 +35,8 @@ public class PatientController {
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<Integer> login(@RequestBody PatientLoginVo patient) {
-        long loginStatus = patientService.Login(patient);
+    public BaseResponse<Integer> login(@RequestBody PatientLoginVo patient, HttpServletRequest request) {
+        long loginStatus = patientService.Login(patient,request);
         if(loginStatus != 1){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"登录失败");
         }
@@ -48,6 +50,11 @@ public class PatientController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"注册失败");
         }
         return new BaseResponse<>(ErrorCode.SUCCESS);
+    }
+    @PostMapping("/editProfile")
+    public BaseResponse<Integer> editProfile(@RequestBody PatientEditProfileVo patient,HttpServletRequest request){
+            patientService.editProfile(patient,request);
+            return null;
     }
 
 }

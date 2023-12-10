@@ -1,4 +1,4 @@
-package com.louis.springbootinit.model.vo.pation;
+package com.louis.springbootinit.model.vo.patient;
 
 import lombok.Data;
 

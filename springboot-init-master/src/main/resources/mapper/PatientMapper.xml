@@ -14,9 +14,10 @@
         <result property="Age" column="Age" jdbcType="INTEGER"/>
         <result property="Name" column="Name" jdbcType="VARCHAR"/>
         <result property="VisitTime" column="VisitTime" jdbcType="TIMESTAMP"/>
+        <result property="AvatarUrl" column="AvatarUrl" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,Account,Password,CreateAt,UpdateAt,PatientStatus,Gender,Age,Name,VisitTime
+        id,Account,Password,CreateAt,UpdateAt,PatientStatus,Gender,Age,Name,VisitTime,AvatarUrl
     </sql>
 </mapper>

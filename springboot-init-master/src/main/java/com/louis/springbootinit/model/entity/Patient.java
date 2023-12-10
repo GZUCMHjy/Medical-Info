@@ -70,6 +70,9 @@ public class Patient implements Serializable {
      */
     private Timestamp VisitTime;
 
-
+    /**
+     * 用户头像
+     */
+    private String AvatarUrl;
 
 }

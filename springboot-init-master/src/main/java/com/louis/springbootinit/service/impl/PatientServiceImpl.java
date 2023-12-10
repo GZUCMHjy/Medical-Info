@@ -4,17 +4,22 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.mapper.PatientMapper;
+import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Patient;
-import com.louis.springbootinit.model.vo.pation.PatientLoginVo;
-import com.louis.springbootinit.model.vo.pation.PatientRegisterVo;
+import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
+import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
+import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
 import com.louis.springbootinit.service.PatientService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author louis
@@ -24,6 +29,7 @@ import javax.annotation.Resource;
 @Service
 @Slf4j
 public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> implements PatientService {
+    public String sessionPrefix = "patient_login";
     @Resource
     private PatientMapper patientMapper;
     /**
@@ -32,7 +38,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      * @return
      */
     @Override
-    public long Login(PatientLoginVo patient) {
+    public long Login(PatientLoginVo patient, HttpServletRequest request) {
         // 0. 校验账号密码基本规范
         if(StringUtils.isBlank(patient.getAccount()) || StringUtils.isBlank(patient.getPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
@@ -53,12 +59,20 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             // 销户
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
         }
+        // 3. 用户脱敏
+        Patient saftyPatient = new Patient();
+        saftyPatient.setName(loginPatient.getName());
+        saftyPatient.setAge(loginPatient.getAge());
+        saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
+        saftyPatient.setGender(loginPatient.getGender());
+        // 4. 单点登录（TODO 采用Redis实现多台服务器的登录）
+        request.getSession().setAttribute(sessionPrefix ,saftyPatient);
         log.info("登录成功");
         return 1;
     }
 
     /**
-     * 患者注册
+     * 患者注册（创建用户）
      * @param patient 患者注册信息
      */
     @Override
@@ -93,11 +107,22 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         addPatient.setAccountStatus(0);
         // 未挂号状态
         addPatient.setPatientStatus(4);
+        // 默认头像
+        addPatient.setAvatarUrl("https://get.wallhere.com/photo/YJM-CGI-women-pink-hair-blushing-portrait-looking-at-viewer-2288644.jpg");
         // 返回成功插入的数据
         long res = patientMapper.insert(addPatient);
         log.info("注册成功");
         return res;
     }
 
-
+    /**
+     * 修改患者信息
+     * @param patient
+     * @return
+     */
+    @Override
+    public PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request) {
+        //patient.ge
+        return null;
+    }
 }
