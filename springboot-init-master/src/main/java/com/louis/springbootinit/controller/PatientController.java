@@ -4,10 +4,12 @@ import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
+import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.entity.Patient;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
 import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
+import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.PatientHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 /**
  * @author louis
@@ -28,6 +31,9 @@ import javax.servlet.http.HttpSession;
 public class PatientController {
     @Resource
     private PatientService patientService;
+
+    @Resource
+    private DoctorService doctorService;
 
     /**
      * 患者登录
@@ -96,6 +102,17 @@ public class PatientController {
             return new BaseResponse<>(200,"退出成功");
         }
         return new BaseResponse<>(ErrorCode.SYSTEM_ERROR);
+    }
+
+    /**
+     * 查询医生
+     * @param department 科室（内科）
+     * @param subspecialty 亚专业（心脏科）
+     * @return
+     */
+    @GetMapping("/queryDockerBySearch")
+    public BaseResponse<List<Doctor>> queryDockerBySearch(@RequestParam String department, @RequestParam String subspecialty){
+        return doctorService.queryDockerBySearch(department,subspecialty);
     }
 
 }
