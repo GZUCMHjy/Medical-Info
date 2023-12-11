@@ -30,7 +30,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> implements PatientService {
-    public String sessionPrefix = "patient_login";
+    public String sessionPrefix = "user_login_";
     @Resource
     private PatientMapper patientMapper;
     /**
@@ -69,9 +69,10 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         saftyPatient.setGender(loginPatient.getGender());
         // 4. 生成token
         String token = UUID.randomUUID().toString();
-        String tokenKey = token + sessionPrefix;
+        String tokenKey = sessionPrefix + token;
         // 5. session存储（TODO 改为Redis存储）
         request.getSession().setAttribute(tokenKey ,saftyPatient);
+
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
         // 6. ThreadLocal存储
         PatientHolder.savePatient(patientDto);
@@ -133,6 +134,20 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     @Override
     public PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request) {
         //patient.ge
+        return null;
+    }
+
+    /**
+     * 查看个人信息
+     * @param
+     * @return
+     */
+    @Override
+    public PatientDto showPatientInfo() {
+        PatientDto patient = PatientHolder.getPatient();
+        if(patient != null){
+            return patient;
+        }
         return null;
     }
 }

@@ -21,4 +21,6 @@ public interface PatientService extends IService<Patient> {
     long Register(PatientRegisterVo patient);
 
     PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request);
+
+    PatientDto showPatientInfo();
 }

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Patient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0
  * @date 2023/12/10 20:09
  */
+@Slf4j
 public class LoginInterceptor implements HandlerInterceptor {
     // 无法注入 因为不属于Spring自带的对象
 
@@ -37,8 +39,9 @@ public class LoginInterceptor implements HandlerInterceptor {
             return false;
         }
         // 2. 基于token获取session中用户
-        String key = "patient_login" + token;
-        Patient patient = (Patient)request.getSession().getAttribute("key");
+        String key = "user_login_" + token;
+        Patient patient = (Patient)request.getSession().getAttribute(key);
+
         // session过期
         if(patient == null){
             response.setStatus(401);
@@ -47,7 +50,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
         PatientHolder.savePatient(patientDto);
         // 3. 手动刷新token有效期
-        request.getSession().setAttribute("lastAccessTime", Instant.now());
+        int sessionTimeoutInSeconds = 30 * 60;
+        request.getSession().setMaxInactiveInterval(sessionTimeoutInSeconds);
         // 4. 放行
         return true;
 
