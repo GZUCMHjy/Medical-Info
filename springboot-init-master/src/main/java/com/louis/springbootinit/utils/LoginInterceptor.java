@@ -42,7 +42,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         String key = "user_login_" + token;
         Patient patient = (Patient)request.getSession().getAttribute(key);
 
-        // session过期
+        // session过期或者删除
         if(patient == null){
             response.setStatus(401);
             return false;

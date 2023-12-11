@@ -2,13 +2,21 @@ package com.louis.springbootinit.model.vo.patient;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @author louis
  * @version 1.0
  * @date 2023/12/10 14:31
  */
 @Data
-public class PatientEditProfileVo {
+public class PatientEditProfileVo implements Serializable {
+
+    private static final long serialVersionUID = -8145700468062709540L;
+    /**
+     * 患者Id
+     */
+    private Integer Id;
     /**
      * 昵称（患者姓名）
      */

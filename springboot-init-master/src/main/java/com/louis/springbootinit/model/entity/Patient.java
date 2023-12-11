@@ -27,9 +27,13 @@ public class Patient implements Serializable {
     @TableField(exist = false)
     private Integer AccountStatus;
     /**
-     * id
+     * id(自增策略)
+     * UUID
+     * ASSIGN_ID
+     * ID_WORKER
+     * AUTO（数据库自增）
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type =IdType.ASSIGN_ID)
     private Integer Id;
 
     /**
@@ -56,7 +60,7 @@ public class Patient implements Serializable {
     /**
      * 性别
      */
-    private Boolean Gender;
+    private String Gender;
     /**
      * 患者年龄
      */

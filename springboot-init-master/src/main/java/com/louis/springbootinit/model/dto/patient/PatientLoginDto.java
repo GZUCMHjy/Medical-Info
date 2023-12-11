@@ -2,6 +2,7 @@ package com.louis.springbootinit.model.dto.patient;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
@@ -10,7 +11,9 @@ import java.sql.Timestamp;
  * @date 2023/12/10 9:50
  */
 @Data
-public class PatientLoginDto {
+public class PatientLoginDto implements Serializable {
+
+    private static final long serialVersionUID = -5746543684698208292L;
     /**
      * 患者账户ID
      */

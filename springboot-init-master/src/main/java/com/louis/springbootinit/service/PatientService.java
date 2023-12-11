@@ -20,7 +20,7 @@ public interface PatientService extends IService<Patient> {
     String Login(PatientLoginVo patient, HttpServletRequest request);
     long Register(PatientRegisterVo patient);
 
-    PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request);
+    PatientDto editProfile(PatientEditProfileVo patient);
 
     PatientDto showPatientInfo();
 }

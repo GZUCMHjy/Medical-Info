@@ -63,6 +63,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         }
         // 3. 用户脱敏
         Patient saftyPatient = new Patient();
+        saftyPatient.setId(loginPatient.getId());
         saftyPatient.setName(loginPatient.getName());
         saftyPatient.setAge(loginPatient.getAge());
         saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
@@ -132,9 +133,30 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      * @return
      */
     @Override
-    public PatientDto editProfile(PatientEditProfileVo patient,HttpServletRequest request) {
-        //patient.ge
-        return null;
+    @Transactional
+    public PatientDto editProfile(PatientEditProfileVo patient) {
+        // 0. 获取基本信息
+        Integer age = patient.getAge();
+        String name = patient.getName();
+        String avatarUrl = patient.getAvatarUrl();
+        String gender = patient.getGender();
+        // 1. 获取当前用户信息
+        PatientDto patientDto = PatientHolder.getPatient();
+        Integer patientId = patientDto.getId();
+        // 2. 修改目标对象
+        Patient targetPatient = query().eq("Id", patientId).one();
+        targetPatient.setAge(age);
+        targetPatient.setName(name);
+        targetPatient.setAvatarUrl(avatarUrl);
+        targetPatient.setGender(gender);
+        int i = patientMapper.updateById(targetPatient);
+        if(i == 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"修改失败");
+        }
+        // 3. 复制传递
+        PatientDto res = BeanUtil.copyProperties(targetPatient, PatientDto.class);
+        // 4. 返回修改结果
+        return res;
     }
 
     /**
@@ -144,10 +166,12 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      */
     @Override
     public PatientDto showPatientInfo() {
+        // 获取当前用户信息
         PatientDto patient = PatientHolder.getPatient();
-        if(patient != null){
-            return patient;
+        // 当前用户是否填写基本信息
+        if(patient.getName() == null && patient.getAge() == null && patient.getAge() == null){
+            return null;
         }
-        return null;
+        return patient;
     }
 }
