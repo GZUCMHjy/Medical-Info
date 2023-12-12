@@ -3,9 +3,11 @@ package com.louis.springbootinit.controller;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
+import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.entity.Patient;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordVo;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
 import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
@@ -17,7 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -115,4 +118,20 @@ public class PatientController {
         return doctorService.queryDockerBySearch(department,subspecialty);
     }
 
+    @GetMapping("/test")
+    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String id = request.getSession().getId();
+        response.getWriter().write(id);
+    }
+
+    /**
+     * 提交挂号单
+     * @param medicalrecordVo
+     * @return
+     */
+    @PostMapping("/appointment")
+    public BaseResponse<MedicalRecordDto> appointmentByPatient(@RequestBody MedicalRecordVo medicalrecordVo){
+
+        return patientService.appointmentByPatient(medicalrecordVo);
+    }
 }

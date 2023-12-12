@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.louis.springbootinit.mapper.MedicalRecordMapper">
+    <resultMap id="BaseResultMap" type="com.louis.springbootinit.model.entity.MedicalRecord">
+        <id property="Id" column="Id" jdbcType="INTEGER"/>
+        <result property="DiagnosisPlan" column="DiagnosisPlan" jdbcType="VARCHAR"/>
+        <result property="Cost" column="Cost" jdbcType="DECIMAL"/>
+        <result property="CreatedAt" column="CreatedAt" jdbcType="TIMESTAMP"/>
+        <result property="UpdatedAt" column="UpdatedAt" jdbcType="TIMESTAMP"/>
+        <result property="PatientId" column="PatientId" jdbcType="INTEGER"/>
+        <result property="DoctorId" column="DoctorId" jdbcType="INTEGER"/>
+        <result property="Department" column="Department" jdbcType="VARCHAR"/>
+        <result property="Subspecialty" column="Subspecialty" jdbcType="VARCHAR"/>
+        <result property="Sign" column="Sign" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        Id,DiagnosisPlan,Cost,CreatedAt,UpdatedAt,PatientId,DoctorId,Department,Subspecialty,Sign
+    </sql>
+</mapper>

@@ -54,6 +54,7 @@ public class Doctor implements Serializable {
 
     /**
      * 剩余挂号量
+     * 默认50
      */
-    private Integer Vacancy;
+    private Integer Vacancy = 50;
 }

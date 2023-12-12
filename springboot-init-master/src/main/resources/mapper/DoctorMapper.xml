@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.louis.springbootinit.mapper.DoctorMapper">
     <resultMap id="BaseResultMap" type="com.louis.springbootinit.model.entity.Doctor">
-        <id property="id" column="id" jdbcType="INTEGER"/>
+        <id property="Id" column="Id" jdbcType="INTEGER"/>
         <result property="Name" column="Name" jdbcType="VARCHAR"/>
         <result property="Department" column="Department" jdbcType="VARCHAR"/>
         <result property="CreatedAt" column="CreatedAt" jdbcType="TIMESTAMP"/>
@@ -15,6 +15,6 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,Name,Department,CreateAt,UpdateAt,Expertise,Subspecialty,Vacancy
+        Id,Name,Department,CreateAt,UpdateAt,Expertise,Subspecialty,Vacancy
     </sql>
 </mapper>

@@ -1,12 +1,21 @@
 package com.louis.springbootinit.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
+import com.louis.springbootinit.mapper.DoctorMapper;
+import com.louis.springbootinit.mapper.MedicalRecordMapper;
 import com.louis.springbootinit.mapper.PatientMapper;
+import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
+import com.louis.springbootinit.model.entity.Doctor;
+import com.louis.springbootinit.model.entity.MedicalRecord;
 import com.louis.springbootinit.model.entity.Patient;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordVo;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
 import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
@@ -33,6 +42,11 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     public String sessionPrefix = "user_login_";
     @Resource
     private PatientMapper patientMapper;
+
+    @Resource
+    private MedicalRecordMapper medicalRecordMapper;
+    @Resource
+    private DoctorMapper doctorMapper;
     /**
      * 患者登录
      *
@@ -71,7 +85,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         // 4. 生成token
         String token = UUID.randomUUID().toString();
         String tokenKey = sessionPrefix + token;
-        // 5. session存储（TODO 改为Redis存储）
+        // 5. 服务端（后台）创建session存储（TODO 改为Redis存储）
         request.getSession().setAttribute(tokenKey ,saftyPatient);
 
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
@@ -173,5 +187,51 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             return null;
         }
         return patient;
+    }
+
+    /**
+     * 患者挂号
+     * @param medicalRecordVo
+     * @return
+     */
+    @Override
+    @Transactional
+    public BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalRecordVo) {
+        // 1. 校验表单参数
+        if(StringUtils.isBlank(medicalRecordVo.getSubspecialty())){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择亚分科");
+        }
+        if(StringUtils.isBlank(medicalRecordVo.getDepartment())){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择科室");
+        }
+        if(medicalRecordVo.getDoctorId() == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择医生");
+        }
+        // 2. 查看该医生是否有空闲的号
+        QueryWrapper<Doctor> doctorQuery = new QueryWrapper<Doctor>();
+        Integer doctorId = medicalRecordVo.getDoctorId();
+        doctorQuery.eq("Id",doctorId);
+        Doctor doctor = doctorMapper.selectOne(doctorQuery);
+        if(doctor == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"查无此医生");
+        }
+        if(doctor.getVacancy() <= 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"此医生挂号已满");
+        }
+        UpdateWrapper<Doctor> doctorUpdateWrapper = new UpdateWrapper<>();
+        // 医生挂号数量一
+        doctorUpdateWrapper.eq("Id",doctorId).setSql("Vacancy = Vacancy - 1");
+        MedicalRecord medicalRecord = new MedicalRecord();
+        // 医生挂号数据
+        medicalRecord.setSign("等待中");
+        medicalRecord.setDepartment(medicalRecordVo.getDepartment());
+        medicalRecord.setSubspecialty(medicalRecordVo.getSubspecialty());
+        medicalRecord.setPatientId(medicalRecordVo.getPatientId());
+        medicalRecord.setDoctorId(medicalRecordVo.getDoctorId());
+        medicalRecord.setCreatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
+        medicalRecord.setUpdatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
+        medicalRecordMapper.insert(medicalRecord);
+        MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
+        return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
     }
 }

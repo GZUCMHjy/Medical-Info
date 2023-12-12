@@ -1,14 +1,16 @@
 package com.louis.springbootinit.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.louis.springbootinit.common.BaseResponse;
+import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Patient;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordVo;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
 import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author louis
@@ -23,4 +25,6 @@ public interface PatientService extends IService<Patient> {
     PatientDto editProfile(PatientEditProfileVo patient);
 
     PatientDto showPatientInfo();
+
+    BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalrecordVo);
 }

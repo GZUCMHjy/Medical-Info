@@ -25,6 +25,7 @@ public class MvcConfig implements WebMvcConfigurer {
                         // 选择不需要拦截的请求路径
                         "/patient/login",
                         "/patient/register",
+                        "/patient/test",
                         "/voucher/**",
                         "/blog/code",
                         "/upload/**",
