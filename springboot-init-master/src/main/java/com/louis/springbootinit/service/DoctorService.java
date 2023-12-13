@@ -2,12 +2,10 @@ package com.louis.springbootinit.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.louis.springbootinit.common.BaseResponse;
-import com.louis.springbootinit.model.dto.patient.PatientDto;
+import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.entity.Doctor;
-import com.louis.springbootinit.model.entity.Patient;
-import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
-import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
-import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
+import com.louis.springbootinit.model.vo.user.LoginForm;
+import com.louis.springbootinit.model.vo.user.RegisterForm;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -20,5 +18,11 @@ import java.util.List;
 public interface DoctorService extends IService<Doctor> {
 
 
-    BaseResponse<List<Doctor>> queryDockerBySearch(String department, String subspecialty);
+    BaseResponse<List<DoctorDto>> queryDoctorBySearch(String department, String subspecialty);
+
+    BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request);
+
+    BaseResponse<String> register(RegisterForm registerForm);
+
+    BaseResponse<DoctorDto> showDoctorInfoBy(int id);
 }

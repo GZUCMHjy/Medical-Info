@@ -22,6 +22,12 @@ public class Doctor implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = -4158790727764710460L;
 
+    /**
+     * 账号状态（注销-1、注册成功0、登录成功1、未登录2）
+     */
+    @TableField(exist = false)
+    private Integer AccountStatus ;
+
     @TableId(type = IdType.ASSIGN_ID)
     private Integer Id;
 
@@ -57,4 +63,12 @@ public class Doctor implements Serializable {
      * 默认50
      */
     private Integer Vacancy = 50;
+    /**
+     * 账号
+     */
+    private String Account;
+    /**
+     * 密码
+     */
+    private String Password;
 }

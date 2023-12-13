@@ -2,18 +2,17 @@ package com.louis.springbootinit.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
+import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.entity.Patient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
+import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
  * @author louis
@@ -33,22 +32,24 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 1. 获取前端请求头的token
-        String token = request.getHeader("token");
-        if(StrUtil.isEmpty(token)){
-            response.setStatus(401);
-            return false;
-        }
+        // String token = request.getHeader("token");
         // 2. 基于token获取session中用户
-        String key = "user_login_" + token;
-        Patient patient = (Patient)request.getSession().getAttribute(key);
-
+        Patient patient = (Patient)request.getSession().getAttribute(USER_LOGIN_KEY);
+        Doctor doctor = (Doctor)request.getSession().getAttribute(USER_LOGIN_KEY);
+        if(patient != null){
+            PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
+            UserHolder.saveUser(patientDto);
+        }
+        if(doctor != null){
+            DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
+            UserHolder.saveUser(doctorDto);
+        }
         // session过期或者删除
-        if(patient == null){
+        if(patient == null && doctor == null){
             response.setStatus(401);
             return false;
         }
-        PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
-        PatientHolder.savePatient(patientDto);
+
         // 3. 手动刷新token有效期
         int sessionTimeoutInSeconds = 30 * 60;
         request.getSession().setMaxInactiveInterval(sessionTimeoutInSeconds);

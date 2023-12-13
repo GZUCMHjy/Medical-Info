@@ -23,9 +23,9 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
                         // 选择不需要拦截的请求路径
-                        "/patient/login",
-                        "/patient/register",
-                        "/patient/test",
+                        "/user/patient/login",
+                        "/user/doctor/login",
+                        "/user/register",
                         "/voucher/**",
                         "/blog/code",
                         "/upload/**",

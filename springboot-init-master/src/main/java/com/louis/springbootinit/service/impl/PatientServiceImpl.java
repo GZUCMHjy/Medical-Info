@@ -17,10 +17,10 @@ import com.louis.springbootinit.model.entity.MedicalRecord;
 import com.louis.springbootinit.model.entity.Patient;
 import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordVo;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
-import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
-import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
+import com.louis.springbootinit.model.vo.user.LoginForm;
+import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.PatientService;
-import com.louis.springbootinit.utils.PatientHolder;
+import com.louis.springbootinit.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
@@ -29,7 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
+
+import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
  * @author louis
@@ -39,7 +40,6 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> implements PatientService {
-    public String sessionPrefix = "user_login_";
     @Resource
     private PatientMapper patientMapper;
 
@@ -47,24 +47,25 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     private MedicalRecordMapper medicalRecordMapper;
     @Resource
     private DoctorMapper doctorMapper;
+
     /**
      * 患者登录
-     *
-     * @param patient 患者登录信息
+     * @param loginForm 登录表单
+     * @param request Servlet请求
      * @return
      */
     @Override
-    public String  Login(PatientLoginVo patient, HttpServletRequest request) {
+    public BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request) {
         // 0. 校验账号密码基本规范
-        if(StringUtils.isBlank(patient.getAccount()) || StringUtils.isBlank(patient.getPassword())){
+        if(StringUtils.isBlank(loginForm.getAccount()) || StringUtils.isBlank(loginForm.getPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
         }
 
-        if(StringUtils.length(patient.getAccount()) < 6 || StringUtils.length(patient.getPassword()) < 6){
+        if(StringUtils.length(loginForm.getAccount()) < 6 || StringUtils.length(loginForm.getPassword()) < 6){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码长度不能小于6");
         }
-        String account = patient.getAccount();
-        String password = patient.getPassword();
+        String account = loginForm.getAccount();
+        String password = loginForm.getPassword();
         // 1. 查数据库 是否存在该用户
         Patient loginPatient = query().eq("Account", account).eq("Password", password).one();
         if(loginPatient == null){
@@ -82,40 +83,38 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         saftyPatient.setAge(loginPatient.getAge());
         saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
         saftyPatient.setGender(loginPatient.getGender());
-        // 4. 生成token
-        String token = UUID.randomUUID().toString();
-        String tokenKey = sessionPrefix + token;
-        // 5. 服务端（后台）创建session存储（TODO 改为Redis存储）
-        request.getSession().setAttribute(tokenKey ,saftyPatient);
+        // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
+        // 根据session的生命周期 同一个sessionKey减少管理过多的session
+        request.getSession().setAttribute(USER_LOGIN_KEY ,saftyPatient);
 
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
-        // 6. ThreadLocal存储
-        PatientHolder.savePatient(patientDto);
+        // 5. ThreadLocal存储
+        UserHolder.saveUser(patientDto);
         log.info("登录成功");
-        // 7. 返回token
-        return token;
+        // 6. 返回登陆成功
+        return new BaseResponse<>(200,"登录成功");
     }
 
     /**
      * 患者注册（创建用户）
-     * @param patient 患者注册信息
+     * @param  registerForm 注册表
      */
     @Override
     @Transactional
-    public long Register(PatientRegisterVo patient) {
+    public BaseResponse<String> Register(RegisterForm registerForm) {
         // 0. 校验账号密码基本规范
-        if(StringUtils.isBlank(patient.getAccount()) || StringUtils.isBlank(patient.getPassword())){
+        if(StringUtils.isBlank(registerForm.getAccount()) || StringUtils.isBlank(registerForm.getPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
         }
 
-        if(StringUtils.length(patient.getAccount()) < 6 || StringUtils.length(patient.getPassword()) < 6){
+        if(StringUtils.length(registerForm.getAccount()) < 6 || StringUtils.length(registerForm.getPassword()) < 6){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码长度不能小于6");
         }
-        if(!patient.getAccount().equals(patient.getCheckPassword())){
+        if(!registerForm.getAccount().equals(registerForm.getCheckPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"两次密码输入不相同");
         }
-        String account = patient.getAccount();
-        String password = patient.getPassword();
+        String account = registerForm.getAccount();
+        String password = registerForm.getPassword();
         // 1. 查数据库 是否存在该用户
         Patient registerPatient = query().eq("Account", account).eq("Password", password).one();
         if(registerPatient != null && registerPatient.getAccountStatus() != Integer.valueOf(-1)){
@@ -138,7 +137,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         long res = patientMapper.insert(addPatient);
 
         log.info("注册成功");
-        return res;
+        return new BaseResponse<>(200,"注册成功");
     }
 
     /**
@@ -155,7 +154,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         String avatarUrl = patient.getAvatarUrl();
         String gender = patient.getGender();
         // 1. 获取当前用户信息
-        PatientDto patientDto = PatientHolder.getPatient();
+        PatientDto patientDto = (PatientDto) UserHolder.getUser();
         Integer patientId = patientDto.getId();
         // 2. 修改目标对象
         Patient targetPatient = query().eq("Id", patientId).one();
@@ -181,7 +180,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     @Override
     public PatientDto showPatientInfo() {
         // 获取当前用户信息
-        PatientDto patient = PatientHolder.getPatient();
+        PatientDto patient = (PatientDto) UserHolder.getUser();
         // 当前用户是否填写基本信息
         if(patient.getName() == null && patient.getAge() == null && patient.getAge() == null){
             return null;
@@ -234,4 +233,5 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
         return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
     }
+
 }

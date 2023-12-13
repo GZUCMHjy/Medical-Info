@@ -7,8 +7,8 @@ import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Patient;
 import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordVo;
 import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
-import com.louis.springbootinit.model.vo.patient.PatientLoginVo;
-import com.louis.springbootinit.model.vo.patient.PatientRegisterVo;
+import com.louis.springbootinit.model.vo.user.LoginForm;
+import com.louis.springbootinit.model.vo.user.RegisterForm;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,12 +19,15 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface PatientService extends IService<Patient> {
 
-    String Login(PatientLoginVo patient, HttpServletRequest request);
-    long Register(PatientRegisterVo patient);
+    BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request);
+
+    BaseResponse<String> Register(RegisterForm registerForm);
+
 
     PatientDto editProfile(PatientEditProfileVo patient);
 
     PatientDto showPatientInfo();
 
     BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalrecordVo);
+
 }

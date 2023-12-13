@@ -14,5 +14,8 @@ public interface CommonConstant {
      * 降序
      */
     String SORT_ORDER_DESC = " descend";
+
+
+    String USER_LOGIN_KEY = "user_login";
     
 }
