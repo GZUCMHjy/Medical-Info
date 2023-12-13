@@ -12,6 +12,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.util.Optional;
+
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
@@ -34,22 +36,26 @@ public class LoginInterceptor implements HandlerInterceptor {
         // 1. 获取前端请求头的token
         // String token = request.getHeader("token");
         // 2. 基于token获取session中用户
-        Patient patient = (Patient)request.getSession().getAttribute(USER_LOGIN_KEY);
-        Doctor doctor = (Doctor)request.getSession().getAttribute(USER_LOGIN_KEY);
-        if(patient != null){
+        Optional<Patient> patientOptional = null;
+        Optional<Doctor> doctorOptional = null;
+        try{
+            patientOptional = Optional.ofNullable((Patient)request.getSession().getAttribute(USER_LOGIN_KEY));
+            Patient patient = patientOptional.get();
             PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
             UserHolder.saveUser(patientDto);
-        }
-        if(doctor != null){
+        }catch (Exception e){
+            doctorOptional = Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY));
+            Doctor doctor = doctorOptional.get();
             DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
             UserHolder.saveUser(doctorDto);
+        }finally {
+            // 最后都要检查一下
+            if(patientOptional == null && doctorOptional == null){
+                // session过期
+                response.setStatus(401);
+                return false;
+            }
         }
-        // session过期或者删除
-        if(patient == null && doctor == null){
-            response.setStatus(401);
-            return false;
-        }
-
         // 3. 手动刷新token有效期
         int sessionTimeoutInSeconds = 30 * 60;
         request.getSession().setMaxInactiveInterval(sessionTimeoutInSeconds);
