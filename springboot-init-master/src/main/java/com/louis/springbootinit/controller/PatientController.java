@@ -63,24 +63,6 @@ public class PatientController {
     }
 
     /**
-     * 患者退出登录
-     * @param request
-     * @return
-     */
-    @PostMapping("/logout")
-    public BaseResponse<String> logout(HttpServletRequest request){
-        Patient patient = (Patient)request.getSession().getAttribute(USER_LOGIN_KEY);
-        if(patient != null){
-            // 删除session
-            request.getSession().invalidate();
-            // 删除ThreadLocal
-            UserHolder.removeUser();
-            return new BaseResponse<>(200,"退出成功");
-        }
-        return new BaseResponse<>(ErrorCode.PARAMS_ERROR);
-    }
-
-    /**
      * 查询医生
      * @param department 科室（内科）
      * @param subspecialty 亚专业（心脏科）
@@ -91,11 +73,11 @@ public class PatientController {
         return doctorService.queryDoctorBySearch(department,subspecialty);
     }
 
-    @GetMapping("/test")
-    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String id = request.getSession().getId();
-        response.getWriter().write(id);
-    }
+//    @GetMapping("/test")
+//    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
+//        String id = request.getSession().getId();
+//        response.getWriter().write(id);
+//    }
 
     /**
      * 提交挂号单

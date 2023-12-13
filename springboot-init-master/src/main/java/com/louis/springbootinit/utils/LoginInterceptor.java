@@ -50,7 +50,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             UserHolder.saveUser(doctorDto);
         }finally {
             // 最后都要检查一下
-            if(patientOptional == null && doctorOptional == null){
+            if(!patientOptional.isPresent() && !doctorOptional.isPresent()){
                 // session过期
                 response.setStatus(401);
                 return false;
