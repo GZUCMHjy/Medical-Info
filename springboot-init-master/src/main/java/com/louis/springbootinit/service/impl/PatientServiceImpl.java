@@ -30,6 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
@@ -42,7 +46,6 @@ import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> implements PatientService {
     @Resource
     private PatientMapper patientMapper;
-
     @Resource
     private MedicalRecordMapper medicalRecordMapper;
     @Resource
@@ -229,9 +232,13 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         medicalRecord.setDoctorId(medicalRecordVo.getDoctorId());
         medicalRecord.setCreatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
         medicalRecord.setUpdatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
+        // 格式化预约时间
+        LocalDateTime now = LocalDateTime.now();
+        now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        Timestamp timeNow = Timestamp.valueOf(now);
+        medicalRecord.setAppointTime(timeNow);
         medicalRecordMapper.insert(medicalRecord);
         MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
         return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
     }
-
 }

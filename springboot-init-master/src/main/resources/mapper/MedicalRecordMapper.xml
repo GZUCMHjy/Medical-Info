@@ -14,6 +14,7 @@
         <result property="Department" column="Department" jdbcType="VARCHAR"/>
         <result property="Subspecialty" column="Subspecialty" jdbcType="VARCHAR"/>
         <result property="Sign" column="Sign" jdbcType="VARCHAR"/>
+        <result property="AppointTime" column="AppointTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">

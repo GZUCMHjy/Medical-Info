@@ -33,4 +33,9 @@ public class MedicalRecordVo implements Serializable {
      * 所挂亚分科
      */
     private String Subspecialty;
+
+    /**
+     * 预约时间
+     */
+    private Timestamp AppointTime;
 }

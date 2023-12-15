@@ -64,4 +64,9 @@ public class MedicalRecord implements Serializable {
      * 挂号状态(等待中，就诊中，已取消，已完成)
      */
     private String Sign;
+
+    /**
+     * 预约时间(YY:MM:DD:HH)
+     */
+    private Timestamp AppointTime;
 }

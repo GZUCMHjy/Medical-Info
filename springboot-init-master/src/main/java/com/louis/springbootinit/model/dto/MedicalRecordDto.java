@@ -2,6 +2,7 @@ package com.louis.springbootinit.model.dto;
 import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 /**
  * @author louis
@@ -46,5 +47,10 @@ public class MedicalRecordDto implements Serializable {
      * 挂号状态(等待中，就诊中，已取消，已完成)
      */
     private String Sign;
+
+    /**
+     * 预约时间
+     */
+    private Timestamp AppointTime;
 }
 
