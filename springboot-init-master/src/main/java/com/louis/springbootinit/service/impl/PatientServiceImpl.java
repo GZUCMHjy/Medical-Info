@@ -3,6 +3,7 @@ package com.louis.springbootinit.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
@@ -26,14 +27,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
+import java.text.SimpleDateFormat;
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
@@ -199,19 +195,27 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     @Override
     @Transactional
     public BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalRecordVo) {
-        // 1. 校验表单参数
-        if(StringUtils.isBlank(medicalRecordVo.getSubspecialty())){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择亚分科");
+        // 0. 校验患者是否重复挂号
+        PatientDto patient = (PatientDto)UserHolder.getUser();
+        Integer patientId = patient.getId();
+        if (query().eq("Id",patientId).one().getPatientStatus() == 0) {
+            // 已挂号
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"您已挂号，请勿重复挂号");
         }
+        // 1. 校验表单参数
+
         if(StringUtils.isBlank(medicalRecordVo.getDepartment())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择科室");
         }
-        if(medicalRecordVo.getDoctorId() == null){
+        if(StringUtils.isBlank(medicalRecordVo.getSubspecialty())){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择亚分科");
+        }
+        if(medicalRecordVo.getDoctor_Id().toString() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择医生");
         }
         // 2. 查看该医生是否有空闲的号
         QueryWrapper<Doctor> doctorQuery = new QueryWrapper<Doctor>();
-        Integer doctorId = medicalRecordVo.getDoctorId();
+        Integer doctorId = medicalRecordVo.getDoctor_Id();
         doctorQuery.eq("Id",doctorId);
         Doctor doctor = doctorMapper.selectOne(doctorQuery);
         if(doctor == null){
@@ -221,24 +225,30 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"此医生挂号已满");
         }
         UpdateWrapper<Doctor> doctorUpdateWrapper = new UpdateWrapper<>();
-        // 医生挂号数量一
+        // 3. 医生挂号数量一
         doctorUpdateWrapper.eq("Id",doctorId).setSql("Vacancy = Vacancy - 1");
         MedicalRecord medicalRecord = new MedicalRecord();
         // 医生挂号数据
         medicalRecord.setSign("等待中");
         medicalRecord.setDepartment(medicalRecordVo.getDepartment());
         medicalRecord.setSubspecialty(medicalRecordVo.getSubspecialty());
-        medicalRecord.setPatientId(medicalRecordVo.getPatientId());
-        medicalRecord.setDoctorId(medicalRecordVo.getDoctorId());
+        medicalRecord.setPatient_Id(medicalRecordVo.getPatient_Id());
+        medicalRecord.setDoctor_Id(medicalRecordVo.getDoctor_Id());
         medicalRecord.setCreatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
         medicalRecord.setUpdatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
         // 格式化预约时间
-        LocalDateTime now = LocalDateTime.now();
-        now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        Timestamp timeNow = Timestamp.valueOf(now);
-        medicalRecord.setAppointTime(timeNow);
+        String appointTime = medicalRecordVo.getAppointTime();
+        // SimpleDateFormat sdf = new SimpleDateFormat("yy:MM:dd HH:mm");
+        medicalRecord.setAppointTime(appointTime);
+        // 4. 插入挂号记录
         medicalRecordMapper.insert(medicalRecord);
         MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
+        // 5. 改变患者状态——挂号状态（候诊）
+
+        boolean update = update().eq("Id", patient.getId()).set("PatientStatus", 0).update();
+        if(!update){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"修改失败");
+        }
         return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
     }
 }

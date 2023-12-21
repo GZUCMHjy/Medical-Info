@@ -46,11 +46,11 @@ public class MedicalRecord implements Serializable {
     /**
      * 就诊对象Id
      */
-    private Integer PatientId;
+    private Integer Patient_Id;
     /**
      * 医生Id
      */
-    private Integer DoctorId;
+    private Integer Doctor_Id;
     /**
      * 科室
      */
@@ -66,7 +66,8 @@ public class MedicalRecord implements Serializable {
     private String Sign;
 
     /**
-     * 预约时间(YY:MM:DD:HH)
+     * 预约时间(YY:MM:DD HH:MM)
+     * 存入数据库类型为String
      */
-    private Timestamp AppointTime;
+    private String AppointTime;
 }

@@ -29,11 +29,11 @@ public class MedicalRecordDto implements Serializable {
     /**
      * 就诊对象Id
      */
-    private Integer PatientId;
+    private Integer Patient_Id;
     /**
      * 医生Id
      */
-    private Integer DoctorId;
+    private Integer Doctor_Id;
     /**
      * 所挂科室
      */
@@ -51,6 +51,6 @@ public class MedicalRecordDto implements Serializable {
     /**
      * 预约时间
      */
-    private Timestamp AppointTime;
+    private String AppointTime;
 }
 

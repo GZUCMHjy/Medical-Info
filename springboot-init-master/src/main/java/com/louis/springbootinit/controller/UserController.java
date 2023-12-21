@@ -12,6 +12,7 @@ import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.UserHolder;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,6 +47,7 @@ public class UserController {
      * @param loginForm 登录表单
      * @return
      */
+    @ApiOperation("患者登录")
     @PostMapping("/patient/login")
     public BaseResponse<String> patientLogin(@RequestBody LoginForm loginForm, HttpServletRequest request) {
         return patientService.Login(loginForm,request);
@@ -56,6 +58,7 @@ public class UserController {
      * @param loginForm 登录表单
      * @return
      */
+    @ApiOperation("医生登录")
     @PostMapping("/doctor/login")
     public BaseResponse<String> doctorLogin(@RequestBody LoginForm loginForm,HttpServletRequest request) {
         return doctorService.Login(loginForm,request);
@@ -66,6 +69,7 @@ public class UserController {
      * @param registerForm 注册表单
      * @return
      */
+    @ApiOperation("公共注册")
     @PostMapping("/register")
     public BaseResponse<String> Register(@RequestBody RegisterForm registerForm) {
         String account = registerForm.getAccount();
@@ -80,6 +84,7 @@ public class UserController {
      * @param request
      * @return
      */
+    @ApiOperation("退出登录")
     @PostMapping("/logout")
     public BaseResponse<String> logout(HttpServletRequest request){
         Object attribute = request.getSession().getAttribute(USER_LOGIN_KEY);
@@ -90,6 +95,5 @@ public class UserController {
             return new BaseResponse<>(ErrorCode.NOT_LOGIN_ERROR);
         }
         return new BaseResponse<>(ErrorCode.SUCCESS);
-
     }
 }

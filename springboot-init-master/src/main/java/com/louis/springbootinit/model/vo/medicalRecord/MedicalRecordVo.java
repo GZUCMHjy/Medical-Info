@@ -20,11 +20,11 @@ public class MedicalRecordVo implements Serializable {
     /**
      * 就诊对象Id
      */
-    private Integer PatientId;
+    private Integer Patient_Id;
     /**
      * 医生Id（工号）
      */
-    private Integer DoctorId;
+    private Integer Doctor_Id;
     /**
      * 所挂科室
      */
@@ -37,5 +37,5 @@ public class MedicalRecordVo implements Serializable {
     /**
      * 预约时间
      */
-    private Timestamp AppointTime;
+    private String AppointTime;
 }

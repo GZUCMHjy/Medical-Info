@@ -12,6 +12,7 @@ import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.UserHolder;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +44,7 @@ public class PatientController {
      * @param patient
      * @return
      */
+    @ApiOperation("编辑患者信息")
     @PostMapping("/editProfile")
     public BaseResponse<PatientDto> editProfile(@RequestBody PatientEditProfileVo patient){
         PatientDto patientDto = patientService.editProfile(patient);
@@ -53,6 +55,7 @@ public class PatientController {
      * 显示患者基本信息
      * @return
      */
+    @ApiOperation("显示患者基本信息")
     @GetMapping("show")
     public BaseResponse<PatientDto> showPatientInfo(){
         PatientDto patientDto = patientService.showPatientInfo();
@@ -68,6 +71,7 @@ public class PatientController {
      * @param subspecialty 亚专业（心脏科）
      * @return
      */
+    @ApiOperation("查询医生")
     @GetMapping("/queryDockerBySearch")
     public BaseResponse<List<DoctorDto>> queryDockerBySearch(@RequestParam String department, @RequestParam String subspecialty){
         return doctorService.queryDoctorBySearch(department,subspecialty);
@@ -84,8 +88,11 @@ public class PatientController {
      * @param medicalrecordVo
      * @return
      */
+    @ApiOperation("提交挂号单")
     @PostMapping("/appointment")
     public BaseResponse<MedicalRecordDto> appointmentByPatient(@RequestBody MedicalRecordVo medicalrecordVo){
+        String subspecialty = medicalrecordVo.getSubspecialty();
+        log.info(subspecialty);
         return patientService.appointmentByPatient(medicalrecordVo);
     }
 }

@@ -2,6 +2,7 @@ package com.louis.springbootinit.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.louis.springbootinit.common.BaseResponse;
+import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.vo.user.LoginForm;
@@ -25,4 +26,8 @@ public interface DoctorService extends IService<Doctor> {
     BaseResponse<String> register(RegisterForm registerForm);
 
     BaseResponse<DoctorDto> showDoctorInfoBy(int id);
+
+    BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList();
+
+    BaseResponse<Boolean> agree(int id);
 }
