@@ -15,6 +15,7 @@ import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.entity.MedicalRecord;
 import com.louis.springbootinit.model.entity.Patient;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
@@ -229,5 +230,53 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         int i = patientMapper.updateById(appointPatient);
         return i >= 1 ? new BaseResponse<>(200,true,"挂号成功")
                       : new BaseResponse<>(ErrorCode.SYSTEM_ERROR);
+    }
+
+    /**
+     * 创建就诊结果单
+     * @return
+     */
+    @Override
+    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis() {
+        // 获取当前用户
+        Doctor doctor = (Doctor)UserHolder.getUser();
+        QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
+        MedicalRecord medicalRecord = medicalRecordQW.eq("Doctor_Id", doctor.getId())
+                .eq("Patient_Id", 1)
+                .select("Id", "DiagnosisPlan", "Department", "Subspecialty", "Cost", "Prescription", "Patient_Id", "Doctor_Id").getEntity();
+        if(medicalRecord == null){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建失败");
+        }
+        // 返回Form视图
+        Integer doctor_id = medicalRecord.getDoctor_Id();
+        Integer patient_id = medicalRecord.getPatient_Id();
+        // 查询名字
+        String doctorName = query().eq("Id", doctor_id).select("Name").one().getName();
+        String patientName = patientMapper.selectById(patient_id).getName();
+        MedicalRecordForm medicalRecordForm = new MedicalRecordForm();
+        medicalRecordForm.setId(medicalRecord.getId());// 默认填写
+        medicalRecordForm.setDoctor_name(doctorName); // 默认填写
+        medicalRecordForm.setPatient_name(patientName);// 默认填写
+        medicalRecordForm.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());// 待填写
+        medicalRecordForm.setDepartment(medicalRecord.getDepartment());// 默认填写
+        medicalRecordForm.setSubspecialty(medicalRecord.getSubspecialty());// 默认填写
+        medicalRecordForm.setPrescription(medicalRecord.getPrescription());// 待填写
+        return new BaseResponse<>(200,medicalRecordForm,"创建成功");
+    }
+
+    /**
+     * 提交就诊结果单（同时修改患者状态）
+     * @param medicalRecordForm
+     * @return
+     */
+    @Override
+    @Transactional
+    public BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm) {
+        if(medicalRecordForm.getPrescription() == null || medicalRecordForm.getDiagnosisPlan() == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请填写完整");
+        }
+        // 修改medicalRecord(这里设计的不好)
+
+        return null;
     }
 }

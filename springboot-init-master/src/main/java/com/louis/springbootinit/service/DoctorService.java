@@ -5,6 +5,7 @@ import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.entity.Doctor;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 
@@ -30,4 +31,8 @@ public interface DoctorService extends IService<Doctor> {
     BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList();
 
     BaseResponse<Boolean> agree(int id);
+
+    BaseResponse<MedicalRecordForm> createJudgeDiagnosis();
+
+    BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm);
 }

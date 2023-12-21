@@ -5,6 +5,7 @@ import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
+import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.service.DoctorService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -53,8 +54,30 @@ public class DoctorController {
      * @param id
      * @return
      */
+    @ApiOperation("确认就诊")
     @PostMapping("/agree/{id}")
     public BaseResponse<Boolean> agreePatientAppointment(@PathVariable("id") int id){
         return doctorService.agree(id);
+    }
+
+    /**
+     * 提交就诊单
+     * @param medicalRecordForm
+     * @return
+     */
+    @ApiOperation("提交就诊单")
+    @PostMapping("/submitMedicalRecord")
+    public BaseResponse<MedicalRecordDto> submitMedicalRecord(@RequestBody MedicalRecordForm medicalRecordForm){
+        return doctorService.submitMedicalRecord(medicalRecordForm);
+    }
+
+    /**
+     * 创建就诊单
+     * @return
+     */
+    @ApiOperation("创建诊断单")
+    @PostMapping("/createJudgeDiagnosis")
+    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(){
+        return doctorService.createJudgeDiagnosis();
     }
 }

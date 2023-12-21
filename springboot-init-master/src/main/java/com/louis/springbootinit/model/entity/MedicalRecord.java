@@ -70,4 +70,9 @@ public class MedicalRecord implements Serializable {
      * 存入数据库类型为String
      */
     private String AppointTime;
+
+    /**
+     * 处方
+     */
+    private String Prescription;
 }

@@ -15,9 +15,10 @@
         <result property="Subspecialty" column="Subspecialty" jdbcType="VARCHAR"/>
         <result property="Sign" column="Sign" jdbcType="VARCHAR"/>
         <result property="AppointTime" column="AppointTime" jdbcType="VARCHAR"/>
+        <result property="Prescription" column="Prescription" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        Id,DiagnosisPlan,Cost,CreatedAt,UpdatedAt,Patient_Id,Doctor_Id,Department,Subspecialty,Sign,AppointTime
+        Id,DiagnosisPlan,Cost,CreatedAt,UpdatedAt,Patient_Id,Doctor_Id,Department,Subspecialty,Sign,AppointTime,Prescription
     </sql>
 </mapper>
