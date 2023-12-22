@@ -23,17 +23,9 @@ public class MedicalRecordDto implements Serializable {
      */
     private String DiagnosisPlan;
     /**
-     * 诊断费用
+     * 诊断总费用（诊断 + 药品）
      */
     private BigDecimal Cost;
-    /**
-     * 就诊对象Id
-     */
-    private Integer Patient_Id;
-    /**
-     * 医生Id
-     */
-    private Integer Doctor_Id;
     /**
      * 所挂科室
      */
@@ -52,5 +44,13 @@ public class MedicalRecordDto implements Serializable {
      * 预约时间
      */
     private String AppointTime;
+    /**
+     * 就诊人姓名
+     */
+    private String PatientName;
+    /**
+     * 医生姓名
+     */
+    private String DoctorName;
 }
 

@@ -3,6 +3,7 @@ package com.louis.springbootinit.model.vo.medicalRecord;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
+import org.apache.poi.hpsf.Decimal;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -46,4 +47,13 @@ public class MedicalRecordForm implements Serializable {
      * 处方
      */
     private String Prescription;
+    /**
+     * 就诊人姓名
+     */
+    private String PatientName;
+    /**
+     * 医生姓名
+     */
+    private String DoctorName;
+
 }

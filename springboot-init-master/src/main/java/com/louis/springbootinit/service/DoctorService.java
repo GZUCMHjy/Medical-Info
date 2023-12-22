@@ -33,7 +33,7 @@ public interface DoctorService extends IService<Doctor> {
 
     BaseResponse<Boolean> agree(int id);
 
-    BaseResponse<MedicalRecordForm> createJudgeDiagnosis();
+    BaseResponse<MedicalRecordForm> createJudgeDiagnosis(int id);
 
     BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm);
 

@@ -2,6 +2,7 @@ package com.louis.springbootinit.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
@@ -32,8 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -196,12 +199,12 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
      */
     @Override
     public BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList() {
-        Doctor doctor = (Doctor) UserHolder.getUser();
+        // 获取当前登录医生的账号id
+        DoctorDto doctor = (DoctorDto) UserHolder.getUser();
         Integer doctorId = doctor.getId();
         QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
         // 查询该医生当天的就诊列表 todo 默认查询当天就诊列表
-        medicalRecordQW.eq("Doctor_Id", doctorId)
-                       .select("Patient_Id", "AppointTime", "Sign");
+        medicalRecordQW.eq("Doctor_Id", doctorId);
         List<MedicalRecord> medicalRecords = medicalRecordMapper.selectList(medicalRecordQW);
         List<MedicalRecordDto> medicalRecordDtos = medicalRecords.stream().
                 map(medicalRecord -> BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class))
@@ -243,16 +246,16 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     }
 
     /**
-     * 创建就诊结果单
+     * 创建患者的就诊结果单
      * @return
      */
     @Override
-    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis() {
+    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(int id) {
         // 获取当前用户
-        Doctor doctor = (Doctor)UserHolder.getUser();
+        DoctorDto doctor = (DoctorDto)UserHolder.getUser();
         QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
         MedicalRecord medicalRecord = medicalRecordQW.eq("Doctor_Id", doctor.getId())
-                .eq("Patient_Id", 1)
+                .eq("Patient_Id", id)
                 .select("Id", "DiagnosisPlan", "Department", "Subspecialty", "Cost", "Prescription", "Patient_Id", "Doctor_Id").getEntity();
         if(medicalRecord == null){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建失败");
@@ -282,23 +285,96 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     @Override
     @Transactional
     public BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm) {
+        // 0. 校验俩参数（处方和诊断）
         if(medicalRecordForm.getPrescription() == null || medicalRecordForm.getDiagnosisPlan() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请填写完整");
         }
-        // 修改medicalRecord(这里设计的不好)
+        // 1. 查询并修改medicalRecord(这里设计的不好)
         Integer medicalRecordFormId = medicalRecordForm.getId();
         MedicalRecord medicalRecord = medicalRecordMapper.selectById(medicalRecordFormId);
         QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
-        // 填入处方和就诊方案
+        // 1.1 填入处方和就诊方案
         medicalRecord.setPrescription(medicalRecordForm.getPrescription());
         medicalRecord.setDiagnosisPlan(medicalRecordForm.getDiagnosisPlan());
-        medicalRecordMapper.updateById(medicalRecord);
         // 分割处方字符串
-        // 进行药房药品的加减
+        // 2. 进行药房药品的加减和计算总费用
         String prescription = medicalRecordForm.getPrescription();
-
-        return null;
+        // 2.1 使用 split 方法切割字符串
+        String[] stringArrays = prescription.split("\\r");
+        // 2.2 药品库存减一操作
+        // todo 默认医生所选的药品是1个
+        Arrays.stream(stringArrays).forEach(this::subtractionDrug);
+        // 2.3 计算总价
+        int count = stringArrays.length;
+        BigDecimal price = BigDecimal.ZERO;
+        for (int i = 0; i < count; i++) {
+            price = price.add(getCost(stringArrays[i]));
+        }
+        medicalRecord.setCost(price);
+        // 3. 补充数据
+        medicalRecord.setDoctorName(medicalRecordForm.getDoctor_name());
+        medicalRecord.setPatientName(medicalRecordForm.getPatientName());
+        medicalRecord.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        medicalRecord.setSubspecialty(medicalRecordForm.getSubspecialty());
+        medicalRecord.setDepartment(medicalRecordForm.getDepartment());
+        MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
+        // 4. 修改患者状态
+        //  4.1 查找对应修改患者
+        Integer patient_id = medicalRecord.getPatient_Id();
+        QueryWrapper<Patient> patientQueryWrapper = new QueryWrapper<>();
+        patientQueryWrapper.eq("Id", patient_id);
+        Patient patient = patientMapper.selectOne(patientQueryWrapper);
+        //  4.2 对指定患者进行个修改状态（就诊结束）
+        UpdateWrapper<Patient> patientUpdateWrapper= new UpdateWrapper<>();
+        patientUpdateWrapper.eq("Id",patient_id).setSql("PatientStatus = 2");
+        // 4.3 更新数据库
+        int update = patientMapper.update(patient, patientUpdateWrapper);
+        if(update == 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
+        }
+        // 5. 更新诊断单表数据
+        int i = medicalRecordMapper.updateById(medicalRecord);
+        if(i == 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"提交失败");
+        }
+        // 6. 成功返回
+        return new BaseResponse<>(200,medicalRecordDto,"提交成功");
     }
+
+    /**
+     * 找到对应的药品进行数量减一
+     * @param str
+     */
+    public void subtractionDrug(String str){
+        // 找到指定药品
+        UpdateWrapper<Drug> drugUpdateWrapper = new UpdateWrapper<>();
+        QueryWrapper<Drug> drugQueryWrapper = new QueryWrapper<>();
+        drugQueryWrapper.eq("DrugName",str);
+        Drug drug = drugMapper.selectOne(drugQueryWrapper);
+        // 查询该药品是否有库存
+        if(drug == null){
+            // 未查找到
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"未查找到药品");
+        }
+        // 减一操作
+        drugUpdateWrapper.eq("DrugName",str).setSql("Count = Count - 1");
+        // 更新数据库
+        drugMapper.update(drug,drugUpdateWrapper);
+    }
+    public BigDecimal getCost(String str){
+        // 找到指定药品
+        QueryWrapper<Drug> drugQueryWrapper = new QueryWrapper<>();
+        drugQueryWrapper.eq("DrugName",str);
+        Drug drug = drugMapper.selectOne(drugQueryWrapper);
+        // 查询该药品是否有库存
+        if(drug == null){
+            // 未查找到
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"未查找到药品");
+        }
+        return drug.getPrice();
+    }
+
+
 
     @Override
     public BaseResponse<List<Drug>> queryDrugList(String drugName) {

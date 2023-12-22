@@ -50,7 +50,7 @@ public class DoctorController {
      * @return
      */
     @ApiOperation("默认查询当天挂号单列表")
-    @PostMapping("/queryMedicalRecordList")
+    @GetMapping("/queryMedicalRecordList")
     public BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList(){
         return doctorService.queryMedicalRecordList();
     }
@@ -82,9 +82,10 @@ public class DoctorController {
      * @return
      */
     @ApiOperation("创建诊断单")
-    @PostMapping("/createJudgeDiagnosis")
-    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(){
-        return doctorService.createJudgeDiagnosis();
+    @PostMapping("/createJudgeDiagnosis/{id}")
+    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(@PathVariable(value = "id") String id){
+
+        return doctorService.createJudgeDiagnosis(Integer.parseInt(id));
     }
 
     /**

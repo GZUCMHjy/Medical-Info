@@ -38,4 +38,12 @@ public class MedicalRecordVo implements Serializable {
      * 预约时间
      */
     private String AppointTime;
+    /**
+     * 就诊人姓名
+     */
+    private String PatientName;
+    /**
+     * 医生姓名
+     */
+    private String DoctorName;
 }

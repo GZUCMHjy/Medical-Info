@@ -72,8 +72,8 @@ public class PatientController {
      * @return
      */
     @ApiOperation("查询医生")
-    @GetMapping("/queryDockerBySearch")
-    public BaseResponse<List<DoctorDto>> queryDockerBySearch(@RequestParam String department, @RequestParam String subspecialty){
+    @GetMapping("/queryDoctorBySearch")
+    public BaseResponse<List<DoctorDto>> queryDoctorBySearch(@RequestParam String department, @RequestParam String subspecialty){
         return doctorService.queryDoctorBySearch(department,subspecialty);
     }
 

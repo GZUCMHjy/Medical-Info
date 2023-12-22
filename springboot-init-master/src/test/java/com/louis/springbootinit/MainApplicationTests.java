@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 
 /**
  * 主类测试
@@ -54,5 +55,19 @@ class MainApplicationTests {
         medicalRecord.setAppointTime(appointTime);
         // 4. 插入挂号记录
         medicalRecordMapper.insert(medicalRecord);
+    }
+
+    /**
+     * 切割字符串
+     */
+    @Test
+    public void splitStr(){
+        String input = "a\rb\rc\rd";
+
+        // 使用 split 方法切割字符串
+        String[] stringArray = input.split("\\r");
+
+        // 打印结果
+        Arrays.stream(stringArray).forEach(System.out::print);
     }
 }

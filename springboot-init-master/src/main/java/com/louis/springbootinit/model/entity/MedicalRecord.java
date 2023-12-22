@@ -75,4 +75,13 @@ public class MedicalRecord implements Serializable {
      * 处方
      */
     private String Prescription;
+    /**
+     * 就诊人姓名
+     */
+    private String PatientName;
+    /**
+     * 医生姓名
+     */
+    private String DoctorName;
+
 }
