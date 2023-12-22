@@ -46,4 +46,9 @@ public class DoctorDto  implements Serializable {
      * 默认50
      */
     private Integer Vacancy = 50;
+
+    /**
+     * 医生职称
+     */
+    private String Level;
 }

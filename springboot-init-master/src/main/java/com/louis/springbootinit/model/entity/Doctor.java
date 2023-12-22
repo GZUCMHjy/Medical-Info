@@ -71,4 +71,8 @@ public class Doctor implements Serializable {
      * 密码
      */
     private String Password;
+    /**
+     * 医生职称
+     */
+    private String Level;
 }

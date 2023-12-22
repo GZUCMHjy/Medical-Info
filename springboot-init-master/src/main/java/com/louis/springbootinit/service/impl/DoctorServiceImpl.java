@@ -114,6 +114,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         saftyDoctor.setExpertise(doctor.getExpertise());
         saftyDoctor.setVacancy(doctor.getVacancy());
         saftyDoctor.setAccountStatus(doctor.getAccountStatus());
+        saftyDoctor.setLevel(doctor.getLevel());
         // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
         // 根据session的生命周期 同一个sessionKey减少管理过多的session
         request.getSession().setAttribute(USER_LOGIN_KEY ,saftyDoctor);
@@ -171,7 +172,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
      * @return
      */
     @Override
-    public BaseResponse<DoctorDto> showDoctorInfoBy(int id) {
+    public BaseResponse<DoctorDto> showDoctorInfo(int id) {
         Doctor doctor = query().eq("Id", id).one();
         if(doctor == null){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"该医生不存在");
@@ -276,7 +277,14 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请填写完整");
         }
         // 修改medicalRecord(这里设计的不好)
-
+        Integer medicalRecordFormId = medicalRecordForm.getId();
+        MedicalRecord medicalRecord = medicalRecordMapper.selectById(medicalRecordFormId);
+        QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
+        // 填入处方和就诊方案
+        medicalRecord.setPrescription(medicalRecordForm.getPrescription());
+        medicalRecord.setDiagnosisPlan(medicalRecordForm.getDiagnosisPlan());
+        medicalRecordMapper.updateById(medicalRecord);
+        String prescription = medicalRecordForm.getPrescription();
         return null;
     }
 }

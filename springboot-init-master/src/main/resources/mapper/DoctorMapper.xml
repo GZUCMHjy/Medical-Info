@@ -14,9 +14,10 @@
         <result property="Vacancy" column="Vacancy" jdbcType="INTEGER"/>
         <result property="Account" column="Account" jdbcType="VARCHAR"/>
         <result property="Password" column="Password" jdbcType="VARCHAR"/>
+        <result property="Level" column="Level" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        Id,Name,Department,CreateAt,UpdateAt,Expertise,Subspecialty,Vacancy,Account,Password
+        Id,Name,Department,CreateAt,UpdateAt,Expertise,Subspecialty,Vacancy,Account,Password,Level
     </sql>
 </mapper>

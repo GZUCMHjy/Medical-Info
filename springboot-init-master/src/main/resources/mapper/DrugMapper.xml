@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.louis.springbootinit.mapper.DrugMapper">
+    <resultMap id="BaseResultMap" type="com.louis.springbootinit.model.entity.Drug">
+        <id property="Id" column="Id" jdbcType="INTEGER"/>
+        <result property="DrugName" column="DrugName" jdbcType="VARCHAR"/>
+        <result property="Count" column="Count" jdbcType="INTEGER"/>
+        <result property="Type" column="Type" jdbcType="VARCHAR"/>
+        <result property="Price" column="Price" jdbcType="DECIMAL"/>
+        <result property="CreatedAt" column="CreatedAt" jdbcType="TIMESTAMP"/>
+        <result property="UpdatedAt" column="UpdatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        Id,DrugName,Count,Type,Price,CreatedAt,UpdatedAt
+    </sql>
+</mapper>

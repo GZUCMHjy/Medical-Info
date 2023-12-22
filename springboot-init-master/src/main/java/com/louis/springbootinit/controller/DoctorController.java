@@ -36,7 +36,7 @@ public class DoctorController {
     @ApiOperation("根据id查询医生")
     @GetMapping("/queryDoctor/{id}")
     public BaseResponse<DoctorDto> queryDoctorById(@PathVariable("id") int id){
-        return doctorService.showDoctorInfoBy(id);
+        return doctorService.showDoctorInfo(id);
     }
 
     /**
