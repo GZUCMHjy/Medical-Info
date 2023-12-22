@@ -7,18 +7,21 @@ import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.mapper.DoctorMapper;
+import com.louis.springbootinit.mapper.DrugMapper;
 import com.louis.springbootinit.mapper.MedicalRecordMapper;
 import com.louis.springbootinit.mapper.PatientMapper;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
+import com.louis.springbootinit.model.entity.Drug;
 import com.louis.springbootinit.model.entity.MedicalRecord;
 import com.louis.springbootinit.model.entity.Patient;
 import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
+import com.louis.springbootinit.service.DrugService;
 import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +57,12 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
 
     @Resource
     private PatientMapper patientMapper;
+
+    @Resource
+    private DrugMapper drugMapper;
+
+    @Resource
+    private DrugService drugService;
 
     /**
      * 查询挂号医生
@@ -286,5 +295,25 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         medicalRecordMapper.updateById(medicalRecord);
         String prescription = medicalRecordForm.getPrescription();
         return null;
+    }
+
+    @Override
+    public BaseResponse<List<Drug>> queryDrugList(String drugName) {
+        if(drugName == null){
+            // 默认查询所有药品
+            return new BaseResponse<>(200,drugService.list(),"查询成功");
+        }
+        QueryWrapper<Drug> drugQW = new QueryWrapper<>();
+        // 模糊查询
+        drugQW.like("DrugName",drugName);
+        List<Drug> drugs = drugMapper.selectList(drugQW);
+        List<Drug> sortDrugs = drugs.stream()
+                .sorted(Comparator.comparingInt(Drug::getCount).reversed()) // 从小到大
+                .collect(Collectors.toList());
+        if(sortDrugs.size() <= 0 || sortDrugs.isEmpty()){
+            // 未查找到
+            return new BaseResponse<>(ErrorCode.NOT_FOUND_ERROR);
+        }
+        return new BaseResponse<>(200,sortDrugs,"查询成功");
     }
 }

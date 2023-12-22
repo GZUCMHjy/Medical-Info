@@ -18,8 +18,9 @@ import java.sql.Timestamp;
 @Data
 @TableName(value = "drug")
 public class Drug implements Serializable {
+
     @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -1619174411898109063L;
 
     @TableId(type = IdType.AUTO)
     private Integer Id;

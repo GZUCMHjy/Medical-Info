@@ -5,8 +5,10 @@ import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
+import com.louis.springbootinit.model.entity.Drug;
 import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.service.DoctorService;
+import com.louis.springbootinit.service.DrugService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,9 @@ import java.util.List;
 public class DoctorController {
     @Resource
     private DoctorService doctorService;
+
+    @Resource
+    private DrugService drugNameService;
 
     @ApiOperation("根据科室和专业查询医生")
     @GetMapping("queryDoctorList")
@@ -79,5 +84,20 @@ public class DoctorController {
     @PostMapping("/createJudgeDiagnosis")
     public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(){
         return doctorService.createJudgeDiagnosis();
+    }
+
+    /**
+     * 模糊查询
+     * @return
+     */
+    @ApiOperation("模糊查询药品列表")
+    @PostMapping("/queryDrugList")
+    public BaseResponse<List<Drug>> queryDrugList(@RequestParam String drugName){
+        return doctorService.queryDrugList(drugName);
+    }
+    @ApiOperation("查询所有药品")
+    @PostMapping("/queryAllDrugList")
+    public BaseResponse<List<Drug>> queryAllDrugList(){
+        return new BaseResponse<>(200,drugNameService.list(),"查询成功");
     }
 }
