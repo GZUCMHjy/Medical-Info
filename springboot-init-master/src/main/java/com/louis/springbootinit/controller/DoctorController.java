@@ -10,6 +10,7 @@ import com.louis.springbootinit.model.vo.medicalRecord.MedicalRecordForm;
 import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.DrugService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,8 +41,8 @@ public class DoctorController {
 
     @ApiOperation("根据id查询医生")
     @GetMapping("/queryDoctor/{id}")
-    public BaseResponse<DoctorDto> queryDoctorById(@PathVariable("id") int id){
-        return doctorService.showDoctorInfo(id);
+    public BaseResponse<DoctorDto> queryDoctorById(@PathVariable("id") String id){
+        return doctorService.showDoctorInfo(Integer.parseInt(id));
     }
 
     /**
@@ -61,8 +62,8 @@ public class DoctorController {
      */
     @ApiOperation("确认就诊")
     @PostMapping("/agree/{id}")
-    public BaseResponse<Boolean> agreePatientAppointment(@PathVariable("id") int id){
-        return doctorService.agree(id);
+    public BaseResponse<Boolean> agreePatientAppointment(@PathVariable("id") String id){
+        return doctorService.agree(Integer.parseInt(id));
     }
 
     /**

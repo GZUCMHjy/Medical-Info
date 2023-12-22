@@ -293,7 +293,10 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         medicalRecord.setPrescription(medicalRecordForm.getPrescription());
         medicalRecord.setDiagnosisPlan(medicalRecordForm.getDiagnosisPlan());
         medicalRecordMapper.updateById(medicalRecord);
+        // 分割处方字符串
+        // 进行药房药品的加减
         String prescription = medicalRecordForm.getPrescription();
+
         return null;
     }
 

@@ -33,25 +33,49 @@ public class LoginInterceptor implements HandlerInterceptor {
     // 所以接口的方法不一定是要全部重写，要看它是否是接口默认的抽象方法，而不是已经实现好的方法！
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 1. 获取前端请求头的token
-        // String token = request.getHeader("token");
-        // 2. 基于token获取session中用户
+        // 1. session获取用户信息
         Optional<Patient> patientOptional = null;
         Optional<Doctor> doctorOptional = null;
+        int flag = -1;// 0是患者 1是医生
+
         try{
             patientOptional = Optional.ofNullable((Patient)request.getSession().getAttribute(USER_LOGIN_KEY));
+            // 患者登录
             Patient patient = patientOptional.get();
             PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
             UserHolder.saveUser(patientDto);
+            flag = 0;
         }catch (Exception e){
+            // 出现转换异常（说明医生登录）
             doctorOptional = Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY));
             Doctor doctor = doctorOptional.get();
             DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
             UserHolder.saveUser(doctorDto);
-        }finally {
-            // 最后都要检查一下
-            if(!patientOptional.isPresent() && !doctorOptional.isPresent()){
-                // session过期
+            flag = 1;
+        }
+        // 医生登录
+//        if(!patientOptional.isPresent()){
+//            doctorOptional = Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY));
+//            Doctor doctor = doctorOptional.get();
+//            DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
+//            UserHolder.saveUser(doctorDto);
+//            flag = 1;
+//        }else{
+//            // 患者登录
+//            Patient patient = patientOptional.get();
+//            PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
+//            UserHolder.saveUser(patientDto);
+//            flag = 0;
+//        }
+        // 最后都要检查一下
+        if(flag == 1){
+            // 检查医生登录信息有无过期
+            if (!Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY)).isPresent()) {
+                response.setStatus(401);
+                return false;
+            }
+        }else{
+            if (!Optional.ofNullable((Patient)request.getSession().getAttribute(USER_LOGIN_KEY)).isPresent()) {
                 response.setStatus(401);
                 return false;
             }
