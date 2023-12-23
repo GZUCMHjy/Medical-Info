@@ -3,6 +3,7 @@ package com.louis.springbootinit.controller;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
 import com.louis.springbootinit.exception.BusinessException;
+import com.louis.springbootinit.model.Registered;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
@@ -12,6 +13,7 @@ import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.UserHolder;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -95,6 +97,12 @@ public class PatientController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"获取患者信息失败");
         }
         return new BaseResponse<>(200,patientDto,"患者信息");
+    }
+
+    @ApiOperation("挂号历史记录")
+    @GetMapping("/showRegisteredList")
+    public BaseResponse<List<Registered>> showRegisteredList(){
+        return patientService.showRegisteredList();
     }
 
 }

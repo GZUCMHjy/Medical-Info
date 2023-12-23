@@ -2,6 +2,7 @@ package com.louis.springbootinit.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.louis.springbootinit.common.BaseResponse;
+import com.louis.springbootinit.model.Registered;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Patient;
@@ -11,6 +12,7 @@ import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author louis
@@ -31,4 +33,6 @@ public interface PatientService extends IService<Patient> {
     BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalrecordVo);
 
     BaseResponse<MedicalRecordDto> appintmentByPatient(int parseInt);
+
+    BaseResponse<List<Registered>> showRegisteredList();
 }

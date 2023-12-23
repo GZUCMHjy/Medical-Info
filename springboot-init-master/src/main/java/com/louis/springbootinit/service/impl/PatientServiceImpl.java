@@ -11,6 +11,7 @@ import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.mapper.DoctorMapper;
 import com.louis.springbootinit.mapper.MedicalRecordMapper;
 import com.louis.springbootinit.mapper.PatientMapper;
+import com.louis.springbootinit.model.Registered;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
@@ -29,6 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
@@ -45,6 +49,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     private MedicalRecordMapper medicalRecordMapper;
     @Resource
     private DoctorMapper doctorMapper;
+
 
     /**
      * 患者登录
@@ -274,5 +279,31 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         medicalRecordDto.setDepartment(doctor.getDepartment());
         medicalRecordDto.setSubspecialty(doctor.getSubspecialty());
         return new BaseResponse<>(200,medicalRecordDto,"预约初始化成功");
+    }
+
+    @Override
+    public BaseResponse<List<Registered>> showRegisteredList() {
+        PatientDto patient = (PatientDto)UserHolder.getUser();
+        Integer patientId = patient.getId();
+        List<MedicalRecord> medicalRecords = medicalRecordMapper.selectList(new QueryWrapper<MedicalRecord>().eq("Patient_Id", patientId));
+        if(medicalRecords == null || medicalRecords.isEmpty()){
+            return new BaseResponse<>(ErrorCode.SYSTEM_ERROR);
+        }
+        int count = medicalRecords.size();
+        // 定好长度 避免扩容影响性能
+        List<Registered> registereds = new ArrayList<>(count);
+        for(int i = 0; i < count; i++){
+            MedicalRecord medicalRecord = medicalRecords.get(i);
+            Registered registered = new Registered();
+            registered.setDoctorName(medicalRecord.getDoctorName());
+            registered.setDepartment(medicalRecord.getDepartment());
+            registered.setSubspecialty(medicalRecord.getSubspecialty());
+            registered.setPatientName(medicalRecord.getPatientName());
+            registered.setCost(medicalRecord.getCost());
+            registered.setPrescription(medicalRecord.getPrescription());
+            registered.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());
+            registereds.add(registered);
+        }
+        return new BaseResponse<>(200,registereds,"查询成功");
     }
 }
