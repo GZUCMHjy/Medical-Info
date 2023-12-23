@@ -28,6 +28,7 @@ public interface PatientService extends IService<Patient> {
 
     PatientDto showPatientInfo();
 
-    BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalrecordVo);
+    BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalrecordVo);
 
+    BaseResponse<MedicalRecordDto> appintmentByPatient(int parseInt);
 }

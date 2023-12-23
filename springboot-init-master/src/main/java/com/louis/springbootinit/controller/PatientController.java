@@ -40,6 +40,38 @@ public class PatientController {
     private DoctorService doctorService;
 
     /**
+     * 查询医生
+     * @param department 科室（内科）
+     * @param subspecialty 亚专业（心脏科）
+     * @return
+     */
+    @ApiOperation("查询医生")
+    @GetMapping("/queryDoctorBySearch")
+    public BaseResponse<List<DoctorDto>> queryDoctorBySearch(@RequestParam String department, @RequestParam String subspecialty){
+        return doctorService.queryDoctorBySearch(department,subspecialty);
+    }
+    /**
+     * 患者挂号
+     * @param id 医生ID
+     * @return
+     */
+    @ApiOperation("患者挂号")
+    @PostMapping("/appointment/{id}")
+    public BaseResponse<MedicalRecordDto> appointmentByPatient(@PathVariable String id){
+        return patientService.appintmentByPatient(Integer.parseInt(id));
+    }
+    /**
+     * 提交挂号单
+     * @param medicalrecordVo
+     * @return
+     */
+    @ApiOperation("提交挂号单")
+    @PostMapping("/submitAppointment")
+    public BaseResponse<MedicalRecordDto> submitAppointment(@RequestBody MedicalRecordVo medicalrecordVo){
+        return patientService.submitAppointment(medicalrecordVo);
+    }
+
+    /**
      * 编辑患者信息
      * @param patient
      * @return
@@ -65,34 +97,4 @@ public class PatientController {
         return new BaseResponse<>(200,patientDto,"患者信息");
     }
 
-    /**
-     * 查询医生
-     * @param department 科室（内科）
-     * @param subspecialty 亚专业（心脏科）
-     * @return
-     */
-    @ApiOperation("查询医生")
-    @GetMapping("/queryDoctorBySearch")
-    public BaseResponse<List<DoctorDto>> queryDoctorBySearch(@RequestParam String department, @RequestParam String subspecialty){
-        return doctorService.queryDoctorBySearch(department,subspecialty);
-    }
-
-//    @GetMapping("/test")
-//    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        String id = request.getSession().getId();
-//        response.getWriter().write(id);
-//    }
-
-    /**
-     * 提交挂号单
-     * @param medicalrecordVo
-     * @return
-     */
-    @ApiOperation("提交挂号单")
-    @PostMapping("/appointment")
-    public BaseResponse<MedicalRecordDto> appointmentByPatient(@RequestBody MedicalRecordVo medicalrecordVo){
-        String subspecialty = medicalrecordVo.getSubspecialty();
-        log.info(subspecialty);
-        return patientService.appointmentByPatient(medicalrecordVo);
-    }
 }

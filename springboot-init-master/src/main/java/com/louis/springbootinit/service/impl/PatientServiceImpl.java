@@ -158,7 +158,6 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         Patient targetPatient = query().eq("Id", patientId).one();
         targetPatient.setAge(age);
         targetPatient.setName(name);
-        targetPatient.setAvatarUrl(avatarUrl);
         targetPatient.setGender(gender);
         int i = patientMapper.updateById(targetPatient);
         if(i == 0){
@@ -166,7 +165,9 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         }
         // 3. 复制传递
         PatientDto res = BeanUtil.copyProperties(targetPatient, PatientDto.class);
-        // 4. 返回修改结果
+        // 4. 更新Session值
+        UserHolder.saveUser(res);
+        // 5. 返回修改结果
         return res;
     }
 
@@ -193,7 +194,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      */
     @Override
     @Transactional
-    public BaseResponse<MedicalRecordDto> appointmentByPatient(MedicalRecordVo medicalRecordVo) {
+    public BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalRecordVo) {
         // 0. 校验患者是否重复挂号
         PatientDto patient = (PatientDto)UserHolder.getUser();
         Integer patientId = patient.getId();
@@ -226,6 +227,9 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         UpdateWrapper<Doctor> doctorUpdateWrapper = new UpdateWrapper<>();
         // 3. 医生挂号数量一
         doctorUpdateWrapper.eq("Id",doctorId).setSql("Vacancy = Vacancy - 1");
+        // 3.1 更新数据
+        doctorMapper.update(doctor,doctorUpdateWrapper);
+
         MedicalRecord medicalRecord = new MedicalRecord();
         // 医生挂号数据
         medicalRecord.setSign("等待中");
@@ -246,8 +250,29 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
         boolean update = update().eq("Id", patient.getId()).set("PatientStatus", 0).update();
         if(!update){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"修改失败");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
         }
         return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
+    }
+
+    @Override
+    public BaseResponse<MedicalRecordDto> appintmentByPatient(int id) {
+        PatientDto patient = (PatientDto)UserHolder.getUser();
+        Integer patientId = patient.getId();
+        QueryWrapper<Doctor> doctorQueryWrapper = new QueryWrapper<>();
+        doctorQueryWrapper.eq("Id",id);
+        Doctor doctor = doctorMapper.selectOne(doctorQueryWrapper);
+        if(doctor == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"查无医生");
+        }
+        MedicalRecordDto medicalRecordDto = new MedicalRecordDto();
+        // 赋值基本信息
+        medicalRecordDto.setPatientName(patient.getName());
+        medicalRecordDto.setPatient_Id(patientId);
+        medicalRecordDto.setDoctor_Id(doctor.getId());
+        medicalRecordDto.setDoctorName(doctor.getName());
+        medicalRecordDto.setDepartment(doctor.getDepartment());
+        medicalRecordDto.setSubspecialty(doctor.getSubspecialty());
+        return new BaseResponse<>(200,medicalRecordDto,"预约初始化成功");
     }
 }

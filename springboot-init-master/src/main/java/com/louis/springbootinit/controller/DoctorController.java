@@ -32,18 +32,6 @@ public class DoctorController {
     @Resource
     private DrugService drugNameService;
 
-    @ApiOperation("根据科室和专业查询医生")
-    @GetMapping("queryDoctorList")
-    public BaseResponse<List<DoctorDto>> queryDoctorListByDoctor(@RequestParam String department, @RequestParam String subspecialty){
-        return doctorService.queryDoctorBySearch(department,subspecialty);
-    }
-
-
-    @ApiOperation("根据id查询医生")
-    @GetMapping("/queryDoctor/{id}")
-    public BaseResponse<DoctorDto> queryDoctorById(@PathVariable("id") String id){
-        return doctorService.showDoctorInfo(Integer.parseInt(id));
-    }
 
     /**
      * 查询当天就诊病人列表
@@ -54,7 +42,6 @@ public class DoctorController {
     public BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList(){
         return doctorService.queryMedicalRecordList();
     }
-
     /**
      * 确认就诊
      * @param id
@@ -67,6 +54,17 @@ public class DoctorController {
     }
 
     /**
+     * 填写患者诊断单
+     * @param id 患者id
+     * @return
+     */
+    @ApiOperation("创建患者诊断单")
+    @PostMapping("/createJudgeDiagnosis/{id}")
+    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(@PathVariable(value = "id") String id){
+
+        return doctorService.createJudgeDiagnosis(Integer.parseInt(id));
+    }
+    /**
      * 提交就诊单
      * @param medicalRecordForm
      * @return
@@ -76,18 +74,6 @@ public class DoctorController {
     public BaseResponse<MedicalRecordDto> submitMedicalRecord(@RequestBody MedicalRecordForm medicalRecordForm){
         return doctorService.submitMedicalRecord(medicalRecordForm);
     }
-
-    /**
-     * 创建就诊单
-     * @return
-     */
-    @ApiOperation("创建诊断单")
-    @PostMapping("/createJudgeDiagnosis/{id}")
-    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(@PathVariable(value = "id") String id){
-
-        return doctorService.createJudgeDiagnosis(Integer.parseInt(id));
-    }
-
     /**
      * 模糊查询
      * @return
@@ -101,5 +87,11 @@ public class DoctorController {
     @PostMapping("/queryAllDrugList")
     public BaseResponse<List<Drug>> queryAllDrugList(){
         return new BaseResponse<>(200,drugNameService.list(),"查询成功");
+    }
+
+    @ApiOperation("根据id查询医生")
+    @GetMapping("/queryDoctor")
+    public BaseResponse<DoctorDto> queryDoctorById(){
+        return doctorService.showDoctorInfo();
     }
 }

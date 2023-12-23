@@ -180,17 +180,16 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
 
     /**
      * 用户信息（医生）
-     * @param id 医生Id
      * @return
      */
     @Override
-    public BaseResponse<DoctorDto> showDoctorInfo(int id) {
-        Doctor doctor = query().eq("Id", id).one();
+    public BaseResponse<DoctorDto> showDoctorInfo() {
+        // 不用查数据库
+        DoctorDto doctor = (DoctorDto)UserHolder.getUser();
         if(doctor == null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"该医生不存在");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"未登录");
         }
-        DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
-        return new BaseResponse<>(200,doctorDto,"医生信息");
+        return new BaseResponse<>(200,doctor,"医生信息");
     }
 
     /**
@@ -210,7 +209,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
                 map(medicalRecord -> BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class))
                 .sorted(Comparator.comparing(MedicalRecordDto::getAppointTime))
                 .collect(Collectors.toList());
-        if(medicalRecordDtos.size() < 0  || medicalRecordDtos.isEmpty()){
+        if(medicalRecordDtos.size() <= 0  || medicalRecordDtos.isEmpty()){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"今日未有挂号");
         }
         // todo 重构通用返回类（将ok 和 error 封装到一个工具类）
@@ -246,7 +245,8 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     }
 
     /**
-     * 创建患者的就诊结果单
+     * 创建患者诊断单
+     * @param id 患者id
      * @return
      */
     @Override

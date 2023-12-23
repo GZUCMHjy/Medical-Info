@@ -27,7 +27,7 @@ public interface DoctorService extends IService<Doctor> {
 
     BaseResponse<String> register(RegisterForm registerForm);
 
-    BaseResponse<DoctorDto> showDoctorInfo(int id);
+    BaseResponse<DoctorDto> showDoctorInfo();
 
     BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList();
 

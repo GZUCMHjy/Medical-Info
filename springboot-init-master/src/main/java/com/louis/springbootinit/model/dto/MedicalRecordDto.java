@@ -19,6 +19,14 @@ public class MedicalRecordDto implements Serializable {
      */
     private Integer Id;
     /**
+     * 就诊对象Id
+     */
+    private Integer Patient_Id;
+    /**
+     * 医生Id
+     */
+    private Integer Doctor_Id;
+    /**
      * 诊断结果和方案
      */
     private String DiagnosisPlan;
