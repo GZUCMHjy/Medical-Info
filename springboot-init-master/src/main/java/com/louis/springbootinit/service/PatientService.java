@@ -35,4 +35,6 @@ public interface PatientService extends IService<Patient> {
     BaseResponse<MedicalRecordDto> appintmentByPatient(int parseInt);
 
     BaseResponse<List<Registered>> showRegisteredList();
+
+    BaseResponse<String> LoginTest(String account, String password, HttpServletRequest request);
 }

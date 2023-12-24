@@ -86,6 +86,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         saftyPatient.setAge(loginPatient.getAge());
         saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
         saftyPatient.setGender(loginPatient.getGender());
+
         // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
         // 根据session的生命周期 同一个sessionKey减少管理过多的session
         request.getSession().setAttribute(USER_LOGIN_KEY ,saftyPatient);
@@ -93,7 +94,9 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
         // 5. ThreadLocal存储
         UserHolder.saveUser(patientDto);
-        log.info("登录成功");
+        if(loginPatient.getName() == null || loginPatient.getAge() == null || loginPatient.getGender() == ""){
+            return new BaseResponse<>(200,"用户未填写信息");
+        }
         // 6. 返回登陆成功
         return new BaseResponse<>(200,"登录成功");
     }
@@ -295,15 +298,23 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         for(int i = 0; i < count; i++){
             MedicalRecord medicalRecord = medicalRecords.get(i);
             Registered registered = new Registered();
+            registered.setMedicalRecordId(medicalRecord.getId());
             registered.setDoctorName(medicalRecord.getDoctorName());
             registered.setDepartment(medicalRecord.getDepartment());
             registered.setSubspecialty(medicalRecord.getSubspecialty());
             registered.setPatientName(medicalRecord.getPatientName());
             registered.setCost(medicalRecord.getCost());
-            registered.setPrescription(medicalRecord.getPrescription());
-            registered.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());
+            registered.setAppointTime(medicalRecord.getAppointTime());
             registereds.add(registered);
         }
         return new BaseResponse<>(200,registereds,"查询成功");
+    }
+
+    @Override
+    public BaseResponse<String> LoginTest(String account, String password, HttpServletRequest request) {
+        if(account == null || password == null){
+            return new BaseResponse<>(200,"账号或者密码为空");
+        }
+        return new BaseResponse<>(200,"登录成功");
     }
 }

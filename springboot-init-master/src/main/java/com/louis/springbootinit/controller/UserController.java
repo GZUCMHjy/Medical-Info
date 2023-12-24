@@ -1,12 +1,10 @@
 package com.louis.springbootinit.controller;
 
-import cn.hutool.core.bean.BeanUtil;
+
+
+import cn.hutool.json.JSONConfig;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
-import com.louis.springbootinit.model.dto.doctor.DoctorDto;
-import com.louis.springbootinit.model.dto.patient.PatientDto;
-import com.louis.springbootinit.model.entity.Doctor;
-import com.louis.springbootinit.model.entity.Patient;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
@@ -14,15 +12,12 @@ import com.louis.springbootinit.service.PatientService;
 import com.louis.springbootinit.utils.UserHolder;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-
-import java.util.Optional;
 
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
@@ -49,9 +44,18 @@ public class UserController {
      */
     @ApiOperation("患者登录")
     @PostMapping("/patient/login")
-    public BaseResponse<String> patientLogin(@RequestBody LoginForm loginForm, HttpServletRequest request) {
+    public BaseResponse<String> patientLogin(LoginForm loginForm, HttpServletRequest request) {
+        String password = loginForm.getPassword();
+        String account = loginForm.getAccount();
         return patientService.Login(loginForm,request);
     }
+//    @ApiOperation("患者登录")
+//    @PostMapping("/patient/login")
+//    public BaseResponse<JSONObject> patientLogin(@RequestBody JSONObject json, HttpServletRequest request) throws JSONException {
+//       // return patientService.LoginTest(Account,Password,request);
+//
+//        return new BaseResponse<>(200,json,"这是前端给来的，我换给你！");
+//    }
 
     /**
      * 医生登录

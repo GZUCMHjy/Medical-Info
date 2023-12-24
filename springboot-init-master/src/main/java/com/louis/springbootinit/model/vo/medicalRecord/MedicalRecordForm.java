@@ -27,14 +27,6 @@ public class MedicalRecordForm implements Serializable {
      */
     private String DiagnosisPlan;
     /**
-     * 医生姓名
-     */
-    private String doctor_name;
-    /**
-     * 患者姓名
-     */
-    private String patient_name;
-    /**
      * 科室
      */
     private String Department;

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 /**
  * @author louis
@@ -14,21 +15,10 @@ import java.math.BigDecimal;
 public class Registered implements Serializable {
 
     private static final long serialVersionUID = 6664801453606005968L;
-
-    /**
-     * 患者id
-     */
-    private Integer patientId;
-
     /**
      * 患者姓名
      */
     private String patientName;
-    /**
-     * 医生id
-     */
-    private Integer doctorId;
-
     /**
      * 医生姓名
      */
@@ -36,21 +26,19 @@ public class Registered implements Serializable {
     /**
      * 科室
      */
-    private String Department;
+    private String department;
     /**
      * 亚分科
      */
-    private String Subspecialty;
-    /**
-     * 处方
-     */
-    private String Prescription;
-    /**
-     * 诊断结果和方案
-     */
-    private String DiagnosisPlan;
+    private String subspecialty;
     /**
      * 诊断费用
      */
-    private BigDecimal Cost ;
+    private BigDecimal cost ;
+    /**
+     * 就诊号
+     */
+    private Integer medicalRecordId;
+
+    private String appointTime;
 }

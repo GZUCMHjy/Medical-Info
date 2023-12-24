@@ -10,9 +10,9 @@ import java.io.Serializable;
  * @date 2023/12/13 9:47
  */
 @Data
-public class LoginForm implements Serializable {
+public class LoginForm{
 
-    private static final long serialVersionUID = -8228583190159830145L;
+    //private static final long serialVersionUID = -8228583190159830145L;
     private String Account;
     private String Password;
 }

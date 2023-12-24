@@ -268,8 +268,8 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         String patientName = patientMapper.selectById(patient_id).getName();
         MedicalRecordForm medicalRecordForm = new MedicalRecordForm();
         medicalRecordForm.setId(medicalRecord.getId());// 默认填写
-        medicalRecordForm.setDoctor_name(doctorName); // 默认填写
-        medicalRecordForm.setPatient_name(patientName);// 默认填写
+        medicalRecordForm.setDoctorName(doctorName); // 默认填写
+        medicalRecordForm.setPatientName(patientName);// 默认填写
         medicalRecordForm.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());// 待填写
         medicalRecordForm.setDepartment(medicalRecord.getDepartment());// 默认填写
         medicalRecordForm.setSubspecialty(medicalRecord.getSubspecialty());// 默认填写
@@ -312,7 +312,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         }
         medicalRecord.setCost(price);
         // 3. 补充数据
-        medicalRecord.setDoctorName(medicalRecordForm.getDoctor_name());
+        medicalRecord.setDoctorName(medicalRecordForm.getDoctorName());
         medicalRecord.setPatientName(medicalRecordForm.getPatientName());
         medicalRecord.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
         medicalRecord.setSubspecialty(medicalRecordForm.getSubspecialty());
