@@ -21,7 +21,7 @@ import java.util.List;
  */
 public interface PatientService extends IService<Patient> {
 
-    BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request);
+    BaseResponse<PatientDto> Login(LoginForm loginForm, HttpServletRequest request);
 
     BaseResponse<String> Register(RegisterForm registerForm);
 

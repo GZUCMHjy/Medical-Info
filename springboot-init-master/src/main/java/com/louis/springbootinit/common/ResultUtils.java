@@ -15,7 +15,9 @@ public class ResultUtils {
     public static <T> BaseResponse<T> success(T data) {
         return new BaseResponse<>(0, data, "ok");
     }
-
+    public static <T> BaseResponse<T> success(T data,String msg) {
+        return new BaseResponse<>(0, data, msg);
+    }
     /**
      * 失败
      *

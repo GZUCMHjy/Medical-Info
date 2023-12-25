@@ -2,6 +2,7 @@ package com.louis.springbootinit.controller;
 
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
+import com.louis.springbootinit.common.ResultUtils;
 import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.model.Registered;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
@@ -48,7 +49,7 @@ public class PatientController {
      * @return
      */
     @ApiOperation("查询医生")
-    @GetMapping("/queryDoctorBySearch")
+    @PostMapping("/queryDoctorBySearch")
     public BaseResponse<List<DoctorDto>> queryDoctorBySearch(@RequestParam String department, @RequestParam String subspecialty){
         return doctorService.queryDoctorBySearch(department,subspecialty);
     }
@@ -69,7 +70,7 @@ public class PatientController {
      */
     @ApiOperation("提交挂号单")
     @PostMapping("/submitAppointment")
-    public BaseResponse<MedicalRecordDto> submitAppointment(@RequestBody MedicalRecordVo medicalrecordVo){
+    public BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalrecordVo){
         return patientService.submitAppointment(medicalrecordVo);
     }
 
@@ -82,7 +83,7 @@ public class PatientController {
     @PostMapping("/editProfile")
     public BaseResponse<PatientDto> editProfile(@RequestBody PatientEditProfileVo patient){
         PatientDto patientDto = patientService.editProfile(patient);
-        return new BaseResponse<>(200,patientDto,"修改成功");
+        return ResultUtils.success(patientDto,"修改成功");
     }
 
     /**
@@ -96,7 +97,7 @@ public class PatientController {
         if(patientDto == null){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"获取患者信息失败");
         }
-        return new BaseResponse<>(200,patientDto,"患者信息");
+        return ResultUtils.success(patientDto);
     }
 
     @ApiOperation("挂号历史记录")

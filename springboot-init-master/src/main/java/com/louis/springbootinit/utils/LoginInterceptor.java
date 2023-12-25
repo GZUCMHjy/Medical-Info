@@ -2,6 +2,8 @@ package com.louis.springbootinit.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.louis.springbootinit.common.ErrorCode;
+import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
@@ -41,6 +43,9 @@ public class LoginInterceptor implements HandlerInterceptor {
         try{
             patientOptional = Optional.ofNullable((Patient)request.getSession().getAttribute(USER_LOGIN_KEY));
             // 患者登录
+            if(!patientOptional.isPresent()){
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
             Patient patient = patientOptional.get();
             PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
             UserHolder.saveUser(patientDto);
@@ -48,25 +53,14 @@ public class LoginInterceptor implements HandlerInterceptor {
         }catch (Exception e){
             // 出现转换异常（说明医生登录）
             doctorOptional = Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY));
+            if(!doctorOptional.isPresent()){
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            }
             Doctor doctor = doctorOptional.get();
             DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
             UserHolder.saveUser(doctorDto);
             flag = 1;
         }
-        // 医生登录
-//        if(!patientOptional.isPresent()){
-//            doctorOptional = Optional.ofNullable((Doctor)request.getSession().getAttribute(USER_LOGIN_KEY));
-//            Doctor doctor = doctorOptional.get();
-//            DoctorDto doctorDto = BeanUtil.copyProperties(doctor, DoctorDto.class);
-//            UserHolder.saveUser(doctorDto);
-//            flag = 1;
-//        }else{
-//            // 患者登录
-//            Patient patient = patientOptional.get();
-//            PatientDto patientDto = BeanUtil.copyProperties(patient, PatientDto.class);
-//            UserHolder.saveUser(patientDto);
-//            flag = 0;
-//        }
         // 最后都要检查一下
         if(flag == 1){
             // 检查医生登录信息有无过期
@@ -85,6 +79,5 @@ public class LoginInterceptor implements HandlerInterceptor {
         request.getSession().setMaxInactiveInterval(sessionTimeoutInSeconds);
         // 4. 放行
         return true;
-
     }
 }

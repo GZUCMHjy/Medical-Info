@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
+import com.louis.springbootinit.common.ResultUtils;
 import com.louis.springbootinit.exception.BusinessException;
 import com.louis.springbootinit.mapper.DoctorMapper;
 import com.louis.springbootinit.mapper.MedicalRecordMapper;
@@ -28,6 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -58,7 +61,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      * @return
      */
     @Override
-    public BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request) {
+    public BaseResponse<PatientDto> Login(LoginForm loginForm, HttpServletRequest request) {
         // 0. 校验账号密码基本规范
         if(StringUtils.isBlank(loginForm.getAccount()) || StringUtils.isBlank(loginForm.getPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
@@ -70,9 +73,12 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         String account = loginForm.getAccount();
         String password = loginForm.getPassword();
         // 1. 查数据库 是否存在该用户
-        Patient loginPatient = query().eq("Account", account).eq("Password", password).one();
+        Patient loginPatient = query().eq("Account", account).one();
         if(loginPatient == null){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"该用户未注册");
+        }
+        if(!loginPatient.getPassword().equals(password)){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"账号或者密码错误");
         }
         // 2. 查看账户状态
         if(loginPatient.getAccountStatus() == Integer.valueOf(-1)) {
@@ -95,10 +101,10 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         // 5. ThreadLocal存储
         UserHolder.saveUser(patientDto);
         if(loginPatient.getName() == null || loginPatient.getAge() == null || loginPatient.getGender() == ""){
-            return new BaseResponse<>(200,"用户未填写信息");
+            return ResultUtils.success(patientDto,"注册成功，请完善个人信息");
         }
         // 6. 返回登陆成功
-        return new BaseResponse<>(200,"登录成功");
+        return ResultUtils.success(patientDto);
     }
 
     /**
@@ -143,7 +149,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         long res = patientMapper.insert(addPatient);
 
         log.info("注册成功");
-        return new BaseResponse<>(200,"注册成功");
+        return ResultUtils.success("注册成功");
     }
 
     /**
@@ -211,7 +217,6 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"您已挂号，请勿重复挂号");
         }
         // 1. 校验表单参数
-
         if(StringUtils.isBlank(medicalRecordVo.getDepartment())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择科室");
         }
@@ -260,7 +265,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         if(!update){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
         }
-        return new BaseResponse<>(200,medicalRecordDto,"挂号成功！等待叫号");
+        return ResultUtils.success(medicalRecordDto,"挂号成功，等待叫号");
     }
 
     @Override
@@ -281,7 +286,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         medicalRecordDto.setDoctorName(doctor.getName());
         medicalRecordDto.setDepartment(doctor.getDepartment());
         medicalRecordDto.setSubspecialty(doctor.getSubspecialty());
-        return new BaseResponse<>(200,medicalRecordDto,"预约初始化成功");
+        return ResultUtils.success(medicalRecordDto);
     }
 
     @Override
@@ -307,7 +312,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             registered.setAppointTime(medicalRecord.getAppointTime());
             registereds.add(registered);
         }
-        return new BaseResponse<>(200,registereds,"查询成功");
+        return ResultUtils.success(registereds);
     }
 
     @Override

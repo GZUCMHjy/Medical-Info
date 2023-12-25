@@ -5,6 +5,7 @@ package com.louis.springbootinit.controller;
 import cn.hutool.json.JSONConfig;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
+import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
@@ -44,18 +45,11 @@ public class UserController {
      */
     @ApiOperation("患者登录")
     @PostMapping("/patient/login")
-    public BaseResponse<String> patientLogin(LoginForm loginForm, HttpServletRequest request) {
+    public BaseResponse<PatientDto> patientLogin(LoginForm loginForm, HttpServletRequest request) {
         String password = loginForm.getPassword();
         String account = loginForm.getAccount();
         return patientService.Login(loginForm,request);
     }
-//    @ApiOperation("患者登录")
-//    @PostMapping("/patient/login")
-//    public BaseResponse<JSONObject> patientLogin(@RequestBody JSONObject json, HttpServletRequest request) throws JSONException {
-//       // return patientService.LoginTest(Account,Password,request);
-//
-//        return new BaseResponse<>(200,json,"这是前端给来的，我换给你！");
-//    }
 
     /**
      * 医生登录
