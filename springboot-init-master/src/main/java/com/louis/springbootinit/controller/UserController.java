@@ -5,6 +5,7 @@ package com.louis.springbootinit.controller;
 import cn.hutool.json.JSONConfig;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
+import com.louis.springbootinit.model.dto.doctor.DoctorDto;
 import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
@@ -38,17 +39,22 @@ public class UserController {
     @Resource
     private DoctorService doctorService;
 
-    /**
-     * 患者登录
-     * @param loginForm 登录表单
-     * @return
-     */
+//    /**
+//     * 患者登录
+//     * @param loginForm 登录表单
+//     * @return
+//     */
+//    @ApiOperation("患者登录")
+//    @PostMapping("/patient/login")
+//    public BaseResponse<PatientDto> patientLogin(LoginForm loginForm, HttpServletRequest request) {
+//        String password = loginForm.getPassword();
+//        String account = loginForm.getAccount();
+//        return patientService.Login(loginForm,request);
+//    }
     @ApiOperation("患者登录")
     @PostMapping("/patient/login")
-    public BaseResponse<PatientDto> patientLogin(LoginForm loginForm, HttpServletRequest request) {
-        String password = loginForm.getPassword();
-        String account = loginForm.getAccount();
-        return patientService.Login(loginForm,request);
+    public BaseResponse<PatientDto> patientLoginTest(@RequestParam String account, @RequestParam String password, HttpServletRequest request) {
+        return patientService.LoginTest1(account,password,request);
     }
 
     /**
@@ -56,10 +62,15 @@ public class UserController {
      * @param loginForm 登录表单
      * @return
      */
+//    @ApiOperation("医生登录")
+//    @PostMapping("/doctor/login")
+//    public BaseResponse<DoctorDto> doctorLogin(LoginForm loginForm, HttpServletRequest request) {
+//        return doctorService.Login(loginForm,request);
+//    }
     @ApiOperation("医生登录")
     @PostMapping("/doctor/login")
-    public BaseResponse<String> doctorLogin(@RequestBody LoginForm loginForm,HttpServletRequest request) {
-        return doctorService.Login(loginForm,request);
+    public BaseResponse<DoctorDto> doctorLogin(@RequestParam String account, @RequestParam String password, HttpServletRequest request) {
+        return doctorService.LoginTest(account,password,request);
     }
 
     /**
@@ -69,7 +80,7 @@ public class UserController {
      */
     @ApiOperation("公共注册")
     @PostMapping("/register")
-    public BaseResponse<String> Register(@RequestBody RegisterForm registerForm) {
+    public BaseResponse<String> Register(RegisterForm registerForm) {
         String account = registerForm.getAccount();
         if(account.contains("D")){
             return doctorService.register(registerForm);

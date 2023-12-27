@@ -29,8 +29,8 @@ public class PatientEditProfileVo implements Serializable {
      * 年龄
      */
     private Integer Age;
-    /**
-     * 头像
-     */
-    private String AvatarUrl;
+//    /**
+//     * 头像
+//     */
+//    private String AvatarUrl;
 }

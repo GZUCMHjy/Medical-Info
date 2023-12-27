@@ -60,5 +60,7 @@ public class MedicalRecordDto implements Serializable {
      * 医生姓名
      */
     private String DoctorName;
+
+    private String Prescription;
 }
 

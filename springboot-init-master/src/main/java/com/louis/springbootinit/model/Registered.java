@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 public class Registered implements Serializable {
 
     private static final long serialVersionUID = 6664801453606005968L;
+
     /**
      * 患者姓名
      */

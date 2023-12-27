@@ -26,7 +26,7 @@ public interface PatientService extends IService<Patient> {
     BaseResponse<String> Register(RegisterForm registerForm);
 
 
-    PatientDto editProfile(PatientEditProfileVo patient);
+    BaseResponse<PatientDto> editProfile(PatientEditProfileVo patient);
 
     PatientDto showPatientInfo();
 
@@ -37,4 +37,6 @@ public interface PatientService extends IService<Patient> {
     BaseResponse<List<Registered>> showRegisteredList();
 
     BaseResponse<String> LoginTest(String account, String password, HttpServletRequest request);
+
+    BaseResponse<PatientDto> LoginTest1(String account, String password, HttpServletRequest request);
 }

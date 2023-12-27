@@ -23,7 +23,7 @@ public interface DoctorService extends IService<Doctor> {
 
     BaseResponse<List<DoctorDto>> queryDoctorBySearch(String department, String subspecialty);
 
-    BaseResponse<String> Login(LoginForm loginForm, HttpServletRequest request);
+    BaseResponse<DoctorDto> Login(LoginForm loginForm, HttpServletRequest request);
 
     BaseResponse<String> register(RegisterForm registerForm);
 
@@ -33,10 +33,11 @@ public interface DoctorService extends IService<Doctor> {
 
     BaseResponse<Boolean> agree(int id);
 
-    BaseResponse<MedicalRecordForm> createJudgeDiagnosis(int id);
+    BaseResponse<MedicalRecordDto> createJudgeDiagnosis(int id);
 
-    BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm);
+    BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm,HttpServletRequest request);
 
     BaseResponse<List<Drug>> queryDrugList(String drugName);
 
+    BaseResponse<DoctorDto> LoginTest(String account, String password, HttpServletRequest request);
 }

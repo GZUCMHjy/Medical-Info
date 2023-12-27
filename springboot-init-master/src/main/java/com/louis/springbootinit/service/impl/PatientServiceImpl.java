@@ -3,7 +3,6 @@ package com.louis.springbootinit.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.louis.springbootinit.common.BaseResponse;
 import com.louis.springbootinit.common.ErrorCode;
@@ -23,16 +22,16 @@ import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.PatientService;
+import com.louis.springbootinit.utils.Repo;
 import com.louis.springbootinit.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,14 +75,17 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         Patient loginPatient = query().eq("Account", account).one();
         if(loginPatient == null){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"该用户未注册");
+            //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR,"该用户未注册");
         }
         if(!loginPatient.getPassword().equals(password)){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"账号或者密码错误");
+            //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR,"账号或者密码错误");
         }
         // 2. 查看账户状态
         if(loginPatient.getAccountStatus() == Integer.valueOf(-1)) {
             // 销户
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
+             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
+            // return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
         }
         // 3. 用户脱敏
         Patient saftyPatient = new Patient();
@@ -95,16 +97,20 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
         // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
         // 根据session的生命周期 同一个sessionKey减少管理过多的session
-        request.getSession().setAttribute(USER_LOGIN_KEY ,saftyPatient);
-
+        HttpSession session = request.getSession(); // 创建或获取会话
+        session.setAttribute("user_login", saftyPatient); // 将用户信息存储在会话中
+        //Patient loggedInUser = (Patient) request.getSession().getAttribute(USER_LOGIN_KEY);
+        //System.out.println("Logged in user: " + loggedInUser);
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
         // 5. ThreadLocal存储
         UserHolder.saveUser(patientDto);
         if(loginPatient.getName() == null || loginPatient.getAge() == null || loginPatient.getGender() == ""){
-            return ResultUtils.success(patientDto,"注册成功，请完善个人信息");
+            return ResultUtils.success(patientDto,"登录成功，请完善个人信息");
+            //return new BaseResponse<>(0,patientDto,"登录成功，请完善个人信息");
         }
         // 6. 返回登陆成功
-        return ResultUtils.success(patientDto);
+         return ResultUtils.success(patientDto,"登录成功");
+        //return new BaseResponse<>(0,patientDto,"登录成功");
     }
 
     /**
@@ -122,7 +128,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         if(StringUtils.length(registerForm.getAccount()) < 6 || StringUtils.length(registerForm.getPassword()) < 6){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码长度不能小于6");
         }
-        if(!registerForm.getAccount().equals(registerForm.getCheckPassword())){
+        if(!registerForm.getPassword().equals(registerForm.getCheckPassword())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"两次密码输入不相同");
         }
         String account = registerForm.getAccount();
@@ -130,7 +136,8 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         // 1. 查数据库 是否存在该用户
         Patient registerPatient = query().eq("Account", account).eq("Password", password).one();
         if(registerPatient != null && registerPatient.getAccountStatus() != Integer.valueOf(-1)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"该用户已注册");
+           throw new BusinessException(ErrorCode.PARAMS_ERROR,"该用户已注册");
+           // return ResultUtils.error(ErrorCode.PARAMS_ERROR,"该用户已注册");
         }
         // 注册，插入一条数据
         Patient addPatient = new Patient();
@@ -149,7 +156,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         long res = patientMapper.insert(addPatient);
 
         log.info("注册成功");
-        return ResultUtils.success("注册成功");
+        return new BaseResponse<>(0,null,"注册成功");
     }
 
     /**
@@ -159,14 +166,14 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      */
     @Override
     @Transactional
-    public PatientDto editProfile(PatientEditProfileVo patient) {
+    public BaseResponse<PatientDto> editProfile(PatientEditProfileVo patient) {
         // 0. 获取基本信息
         Integer age = patient.getAge();
         String name = patient.getName();
-        String avatarUrl = patient.getAvatarUrl();
+        //String avatarUrl = patient.getAvatarUrl();
         String gender = patient.getGender();
         // 1. 获取当前用户信息
-        PatientDto patientDto = (PatientDto) UserHolder.getUser();
+        PatientDto patientDto = (PatientDto) Repo.get();
         Integer patientId = patientDto.getId();
         // 2. 修改目标对象
         Patient targetPatient = query().eq("Id", patientId).one();
@@ -175,14 +182,15 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         targetPatient.setGender(gender);
         int i = patientMapper.updateById(targetPatient);
         if(i == 0){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"修改失败");
+             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"修改失败");
         }
         // 3. 复制传递
         PatientDto res = BeanUtil.copyProperties(targetPatient, PatientDto.class);
         // 4. 更新Session值
-        UserHolder.saveUser(res);
+//        UserHolder.saveUser(res);
+        Repo.save(res);
         // 5. 返回修改结果
-        return res;
+        return ResultUtils.success(res);
     }
 
     /**
@@ -210,7 +218,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     @Transactional
     public BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalRecordVo) {
         // 0. 校验患者是否重复挂号
-        PatientDto patient = (PatientDto)UserHolder.getUser();
+        PatientDto patient = (PatientDto)Repo.get();
         Integer patientId = patient.getId();
         if (query().eq("Id",patientId).one().getPatientStatus() == 0) {
             // 已挂号
@@ -219,13 +227,16 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         // 1. 校验表单参数
         if(StringUtils.isBlank(medicalRecordVo.getDepartment())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择科室");
+            //return ResultUtils.error(ErrorCode.PARAMS_ERROR,"请选择科室");
         }
         if(StringUtils.isBlank(medicalRecordVo.getSubspecialty())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择亚分科");
+           // return ResultUtils.error(ErrorCode.PARAMS_ERROR,"请选择亚分科");
         }
-        if(medicalRecordVo.getDoctor_Id().toString() == null){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择医生");
-        }
+//        if(medicalRecordVo.getDoctor_Id().toString() == null){
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择医生");
+//            //return ResultUtils.error(ErrorCode.PARAMS_ERROR,"请选择医生");
+//        }
         // 2. 查看该医生是否有空闲的号
         QueryWrapper<Doctor> doctorQuery = new QueryWrapper<Doctor>();
         Integer doctorId = medicalRecordVo.getDoctor_Id();
@@ -233,9 +244,11 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         Doctor doctor = doctorMapper.selectOne(doctorQuery);
         if(doctor == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"查无此医生");
+            //return ResultUtils.error(ErrorCode.PARAMS_ERROR,"查无此医生");
         }
         if(doctor.getVacancy() <= 0){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"此医生挂号已满");
+             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"此医生挂号已满");
+            //return ResultUtils.error(ErrorCode.SYSTEM_ERROR,"此医生挂号已满");
         }
         UpdateWrapper<Doctor> doctorUpdateWrapper = new UpdateWrapper<>();
         // 3. 医生挂号数量一
@@ -245,17 +258,20 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
         MedicalRecord medicalRecord = new MedicalRecord();
         // 医生挂号数据
-        medicalRecord.setSign("等待中");
-        medicalRecord.setDepartment(medicalRecordVo.getDepartment());
-        medicalRecord.setSubspecialty(medicalRecordVo.getSubspecialty());
-        medicalRecord.setPatient_Id(medicalRecordVo.getPatient_Id());
-        medicalRecord.setDoctor_Id(medicalRecordVo.getDoctor_Id());
-        medicalRecord.setCreatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
-        medicalRecord.setUpdatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));
+        medicalRecord.setSign("等待中");//1
+        medicalRecord.setDepartment(medicalRecordVo.getDepartment());//1
+        medicalRecord.setSubspecialty(medicalRecordVo.getSubspecialty());//1
+        medicalRecord.setPatient_Id(medicalRecordVo.getPatient_Id());//1
+        medicalRecord.setDoctor_Id(medicalRecordVo.getDoctor_Id());//1
+        medicalRecord.setCreatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));//1
+        medicalRecord.setUpdatedAt(new java.sql.Timestamp(DateTimeUtils.currentTimeMillis()));//1
+        medicalRecord.setPrescription("");//1
+        medicalRecord.setPatientName(patient.getName());//1
+        medicalRecord.setDoctorName(doctor.getName());//1
         // 格式化预约时间
         String appointTime = medicalRecordVo.getAppointTime();
         // SimpleDateFormat sdf = new SimpleDateFormat("yy:MM:dd HH:mm");
-        medicalRecord.setAppointTime(appointTime);
+        medicalRecord.setAppointTime(appointTime);//1
         // 4. 插入挂号记录
         medicalRecordMapper.insert(medicalRecord);
         MedicalRecordDto medicalRecordDto = BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class);
@@ -263,20 +279,22 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
         boolean update = update().eq("Id", patient.getId()).set("PatientStatus", 0).update();
         if(!update){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
+             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
+            //return ResultUtils.error(ErrorCode.SYSTEM_ERROR,"患者状态更新失败");
         }
         return ResultUtils.success(medicalRecordDto,"挂号成功，等待叫号");
     }
 
     @Override
     public BaseResponse<MedicalRecordDto> appintmentByPatient(int id) {
-        PatientDto patient = (PatientDto)UserHolder.getUser();
+        PatientDto patient = (PatientDto)Repo.get();
         Integer patientId = patient.getId();
         QueryWrapper<Doctor> doctorQueryWrapper = new QueryWrapper<>();
         doctorQueryWrapper.eq("Id",id);
         Doctor doctor = doctorMapper.selectOne(doctorQueryWrapper);
         if(doctor == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"查无医生");
+            //return ResultUtils.error(ErrorCode.PARAMS_ERROR,"查无医生");
         }
         MedicalRecordDto medicalRecordDto = new MedicalRecordDto();
         // 赋值基本信息
@@ -291,26 +309,33 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
     @Override
     public BaseResponse<List<Registered>> showRegisteredList() {
-        PatientDto patient = (PatientDto)UserHolder.getUser();
+        PatientDto patient = (PatientDto)Repo.get();
         Integer patientId = patient.getId();
-        List<MedicalRecord> medicalRecords = medicalRecordMapper.selectList(new QueryWrapper<MedicalRecord>().eq("Patient_Id", patientId));
+        List<MedicalRecord> medicalRecords =
+                medicalRecordMapper.selectList(new QueryWrapper<MedicalRecord>()
+                        .eq("Patient_Id", patientId));// 查看挂号历史记录（已完成就诊的历史记录）
         if(medicalRecords == null || medicalRecords.isEmpty()){
             return new BaseResponse<>(ErrorCode.SYSTEM_ERROR);
+            //return ResultUtils.error(ErrorCode.SYSTEM_ERROR,"进入无患者挂号");
         }
         int count = medicalRecords.size();
         // 定好长度 避免扩容影响性能
         List<Registered> registereds = new ArrayList<>(count);
         for(int i = 0; i < count; i++){
             MedicalRecord medicalRecord = medicalRecords.get(i);
-            Registered registered = new Registered();
-            registered.setMedicalRecordId(medicalRecord.getId());
-            registered.setDoctorName(medicalRecord.getDoctorName());
-            registered.setDepartment(medicalRecord.getDepartment());
-            registered.setSubspecialty(medicalRecord.getSubspecialty());
-            registered.setPatientName(medicalRecord.getPatientName());
-            registered.setCost(medicalRecord.getCost());
-            registered.setAppointTime(medicalRecord.getAppointTime());
-            registereds.add(registered);
+            int patientID = medicalRecord.getPatient_Id();
+            Patient one = query().eq("Id", patientID).one();
+            if(one.getPatientStatus() == 4){
+                Registered registered = new Registered();
+                registered.setMedicalRecordId(medicalRecord.getId());
+                registered.setDoctorName(medicalRecord.getDoctorName());
+                registered.setDepartment(medicalRecord.getDepartment());
+                registered.setSubspecialty(medicalRecord.getSubspecialty());
+                registered.setPatientName(medicalRecord.getPatientName());
+                registered.setCost(medicalRecord.getCost());
+                registered.setAppointTime(medicalRecord.getAppointTime());
+                registereds.add(registered);
+            }
         }
         return ResultUtils.success(registereds);
     }
@@ -321,5 +346,57 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             return new BaseResponse<>(200,"账号或者密码为空");
         }
         return new BaseResponse<>(200,"登录成功");
+    }
+
+    @Override
+    public BaseResponse<PatientDto> LoginTest1(String account, String password, HttpServletRequest request) {
+        // 0. 校验账号密码基本规范
+        if(StringUtils.isBlank(account) || StringUtils.isBlank(password)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码不能为空");
+        }
+
+        if(StringUtils.length(account) < 6 || StringUtils.length(password) < 6){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码长度不能小于6");
+        }
+        // 1. 查数据库 是否存在该用户
+        Patient loginPatient = query().eq("Account", account).one();
+        if(loginPatient == null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"该用户未注册");
+            //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR,"该用户未注册");
+        }
+        if(!loginPatient.getPassword().equals(password)){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"账号或者密码错误");
+            //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR,"账号或者密码错误");
+        }
+        // 2. 查看账户状态
+        if(loginPatient.getAccountStatus() == Integer.valueOf(-1)) {
+            // 销户
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
+            // return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR, "该用户已注销");
+        }
+        // 3. 用户脱敏
+        Patient saftyPatient = new Patient();
+        saftyPatient.setId(loginPatient.getId());
+        saftyPatient.setName(loginPatient.getName());
+        saftyPatient.setAge(loginPatient.getAge());
+        saftyPatient.setAvatarUrl(loginPatient.getAvatarUrl());
+        saftyPatient.setGender(loginPatient.getGender());
+
+        // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
+        // 根据session的生命周期 同一个sessionKey减少管理过多的session
+        HttpSession session = request.getSession(); // 创建或获取会话
+        session.setAttribute("user_login", saftyPatient); // 将用户信息存储在会话中
+        //Patient loggedInUser = (Patient) request.getSession().getAttribute(USER_LOGIN_KEY);
+        //System.out.println("Logged in user: " + loggedInUser);
+        PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
+        // 5. ThreadLocal存储
+        //UserHolder.saveUser(patientDto);
+        Repo.save(patientDto);
+        if(loginPatient.getName() == null || loginPatient.getAge() == null || loginPatient.getGender() == ""){
+            return ResultUtils.success(patientDto,"登录成功，请完善个人信息");
+            //return new BaseResponse<>(0,patientDto,"登录成功，请完善个人信息");
+        }
+        // 6. 返回登陆成功
+        return ResultUtils.success(patientDto);
     }
 }

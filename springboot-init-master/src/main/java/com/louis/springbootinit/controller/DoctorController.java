@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -60,7 +61,7 @@ public class DoctorController {
      */
     @ApiOperation("创建患者诊断单")
     @PostMapping("/createJudgeDiagnosis/{id}")
-    public BaseResponse<MedicalRecordForm> createJudgeDiagnosis(@PathVariable(value = "id") String id){
+    public BaseResponse<MedicalRecordDto> createJudgeDiagnosis(@PathVariable(value = "id") String id){
 
         return doctorService.createJudgeDiagnosis(Integer.parseInt(id));
     }
@@ -71,22 +72,22 @@ public class DoctorController {
      */
     @ApiOperation("提交就诊单")
     @PostMapping("/submitMedicalRecord")
-    public BaseResponse<MedicalRecordDto> submitMedicalRecord(@RequestBody MedicalRecordForm medicalRecordForm){
-        return doctorService.submitMedicalRecord(medicalRecordForm);
+    public BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm, HttpServletRequest request){
+        return doctorService.submitMedicalRecord(medicalRecordForm,request);
     }
     /**
      * 模糊查询
      * @return
      */
     @ApiOperation("模糊查询药品列表")
-    @PostMapping("/queryDrugList")
-    public BaseResponse<List<Drug>> queryDrugList(@RequestParam String drugName){
+    @GetMapping("/queryDrugList")
+    public BaseResponse<List<Drug>> queryDrugList(String drugName){
         return doctorService.queryDrugList(drugName);
     }
     @ApiOperation("查询所有药品")
-    @PostMapping("/queryAllDrugList")
+    @GetMapping("/queryAllDrugList")
     public BaseResponse<List<Drug>> queryAllDrugList(){
-        return new BaseResponse<>(200,drugNameService.list(),"查询成功");
+        return new BaseResponse<>(0,drugNameService.list(),"查询成功");
     }
 
     @ApiOperation("根据id查询医生")

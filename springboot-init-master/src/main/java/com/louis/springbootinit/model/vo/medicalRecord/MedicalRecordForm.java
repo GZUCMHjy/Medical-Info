@@ -19,33 +19,18 @@ public class MedicalRecordForm implements Serializable {
 
     private static final long serialVersionUID = 881412327013747275L;
     /**
-     * 诊断单Id
-     */
-    private Integer Id;
-    /**
      * 诊断结果
      */
     private String DiagnosisPlan;
     /**
-     * 科室
-     */
-    private String Department;
-    /**
-     * 亚分科
-     */
-    private String Subspecialty;
-
-    /**
      * 处方
      */
     private String Prescription;
+
     /**
-     * 就诊人姓名
+     * 单号ID
      */
-    private String PatientName;
-    /**
-     * 医生姓名
-     */
-    private String DoctorName;
+    private Integer Id;
+
 
 }

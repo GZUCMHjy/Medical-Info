@@ -81,9 +81,10 @@ public class PatientController {
      */
     @ApiOperation("编辑患者信息")
     @PostMapping("/editProfile")
-    public BaseResponse<PatientDto> editProfile(@RequestBody PatientEditProfileVo patient){
-        PatientDto patientDto = patientService.editProfile(patient);
-        return ResultUtils.success(patientDto,"修改成功");
+    public BaseResponse<PatientDto> editProfile(PatientEditProfileVo patient){
+        //PatientDto patientDto = patientService.editProfile(patient);
+        return patientService.editProfile(patient);
+       // return new BaseResponse<>(0,patientDto,"修改成功");
     }
 
     /**
