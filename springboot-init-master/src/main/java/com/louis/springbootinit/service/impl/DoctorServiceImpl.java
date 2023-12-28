@@ -419,37 +419,28 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     public BaseResponse<List<Drug>> queryDrugList(String drugName,String drugType) {
         Optional<String> drugNameOptional = Optional.ofNullable(drugName);
         Optional<String> drugTypeOptional = Optional.ofNullable(drugType);
-        // 药品类型查询
-//        if(!drugNameOptional.isPresent() || drugTypeOptional.isPresent()){
-//            // 默认查询所有药品
-//            return new BaseResponse<>(0,drugService.drugList(drugType),"查询成功");
-//            //return ResultUtils.success(drugMapper.selectList(null),"查询成功");
-//        }
-//        // 药品名称查询
-//        if(drugNameOptional.isPresent() || !drugTypeOptional.isPresent()){
-//            // 默认查询所有药品
-//            QueryWrapper<Drug> drugQW = new QueryWrapper<>();
-//            // 模糊查询
-//            drugQW.like("DrugName",drugName);
-//            List<Drug> drugs = drugMapper.selectList(drugQW);
-//            List<Drug> sortDrugs = drugs.stream()
-//                    .sorted(Comparator.comparingInt(Drug::getCount).reversed()) // 从小到大
-//                    .collect(Collectors.toList());
-//            if(sortDrugs.size() <= 0 || sortDrugs.isEmpty()){
-//                // 未查找到
-//                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-//                //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR);
-//            }
+        QueryWrapper<Drug> drugQueryWrapper = new QueryWrapper<>();
+
+            // 无参查询
             if(!drugNameOptional.isPresent() && !drugTypeOptional.isPresent()){
                 return ResultUtils.success(drugService.list());
-            }else if(drugNameOptional.isPresent() && drugName.equals("")){
+            }
+            // 药品类型查询
+            if(drugName.equals("")){
 
                 return new BaseResponse<>(0,drugService.drugList(drugType),"查询成功");
             }
-        return queryDrugName(drugName);
-            //return ResultUtils.success(drugMapper.selectList(null),"查询成功");
-        // 默认查询所有药品
+            // 药名查询
+            if(drugType.equals("")){
 
+                return queryDrugName(drugName);
+            }
+
+            // 双参数查询
+            drugQueryWrapper.like("DrugName",drugName)
+                    .like("Type",drugType);
+            List<Drug> drugs = drugMapper.selectList(drugQueryWrapper);
+            return new BaseResponse<>(0,drugs,"查询成功");
     }
 
     /**
