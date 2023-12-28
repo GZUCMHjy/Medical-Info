@@ -42,4 +42,11 @@ public class Registered implements Serializable {
     private Integer medicalRecordId;
 
     private String appointTime;
+
+    private String Prescription;
+    private String DiagnosisPlan;
+    /**
+     * 患者状态
+     */
+    private String Sign;
 }

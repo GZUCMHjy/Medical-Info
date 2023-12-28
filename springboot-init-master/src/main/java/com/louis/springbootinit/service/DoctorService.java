@@ -37,7 +37,7 @@ public interface DoctorService extends IService<Doctor> {
 
     BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm,HttpServletRequest request);
 
-    BaseResponse<List<Drug>> queryDrugList(String drugName);
+    BaseResponse<List<Drug>> queryDrugList(String drugName,String drugType);
 
     BaseResponse<DoctorDto> LoginTest(String account, String password, HttpServletRequest request);
 }

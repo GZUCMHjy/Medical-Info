@@ -81,14 +81,19 @@ public class DoctorController {
      */
     @ApiOperation("模糊查询药品列表")
     @GetMapping("/queryDrugList")
-    public BaseResponse<List<Drug>> queryDrugList(String drugName){
-        return doctorService.queryDrugList(drugName);
+    public BaseResponse<List<Drug>> queryDrugList(String drugName,String drugType){
+        return doctorService.queryDrugList(drugName,drugType);
     }
-    @ApiOperation("查询所有药品")
-    @GetMapping("/queryAllDrugList")
-    public BaseResponse<List<Drug>> queryAllDrugList(){
-        return new BaseResponse<>(0,drugNameService.list(),"查询成功");
-    }
+//    @ApiOperation("查询所有药品")
+//    @GetMapping("/queryAllDrugList")
+//    public BaseResponse<List<Drug>> queryAllDrugList(){
+//        return new BaseResponse<>(0,drugNameService.list(),"查询成功");
+//    }
+//    @ApiOperation("查询所有药品")
+//    @GetMapping("/queryAllDrugList")
+//    public BaseResponse<List<Drug>> queryAllDrugList(String drugType){
+//        return new BaseResponse<>(0,drugNameService.drugList(drugType),"查询成功");
+//    }
 
     @ApiOperation("根据id查询医生")
     @GetMapping("/queryDoctor")

@@ -107,4 +107,15 @@ public class PatientController {
         return patientService.showRegisteredList();
     }
 
+    /**
+     * 退号
+     * @param id 挂号单id
+     * @return
+     */
+    @ApiOperation("退出挂号")
+    @PostMapping("quitAppointment")
+    public BaseResponse<Registered> quitAppointment(@RequestParam String id){
+        return patientService.quitAppointment(Integer.parseInt(id));
+    }
+
 }

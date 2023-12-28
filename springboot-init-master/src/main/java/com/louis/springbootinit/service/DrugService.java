@@ -19,4 +19,5 @@ import java.util.List;
  * @date 2023/12/10 10:22
  */
 public interface DrugService extends IService<Drug> {
+    List<Drug> drugList(String drugType);
 }

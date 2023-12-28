@@ -14,7 +14,6 @@ import com.louis.springbootinit.mapper.MedicalRecordMapper;
 import com.louis.springbootinit.mapper.PatientMapper;
 import com.louis.springbootinit.model.dto.MedicalRecordDto;
 import com.louis.springbootinit.model.dto.doctor.DoctorDto;
-import com.louis.springbootinit.model.dto.patient.PatientDto;
 import com.louis.springbootinit.model.entity.Doctor;
 import com.louis.springbootinit.model.entity.Drug;
 import com.louis.springbootinit.model.entity.MedicalRecord;
@@ -24,8 +23,8 @@ import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.DoctorService;
 import com.louis.springbootinit.service.DrugService;
-import com.louis.springbootinit.service.PatientService;
-import com.louis.springbootinit.utils.Repo;
+import com.louis.springbootinit.utils.RepoD;
+import com.louis.springbootinit.utils.RepoP;
 import com.louis.springbootinit.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -36,12 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
@@ -211,7 +208,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     @Override
     public BaseResponse<List<MedicalRecordDto>> queryMedicalRecordList() {
         // 获取当前登录医生的账号id
-        DoctorDto doctor = (DoctorDto) Repo.get();
+        DoctorDto doctor = (DoctorDto) RepoD.get();
         Integer doctorId = doctor.getId();
         QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
         // 查询该医生当天的就诊列表 todo 默认查询当天就诊列表
@@ -222,9 +219,9 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
                 .map(medicalRecord -> BeanUtil.copyProperties(medicalRecord, MedicalRecordDto.class))
                 .sorted(Comparator.comparing(MedicalRecordDto::getAppointTime))// 先来先服务原则
                 .collect(Collectors.toList());
-        if(medicalRecordDtos.size() <= 0  || medicalRecordDtos.isEmpty()){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"今日未有挂号");
-        }
+//        if(medicalRecordDtos.size() <= 0  || medicalRecordDtos.isEmpty()){
+//            return ResultUtils.success(medicalRecordDtos);
+//        }
         // todo 重构通用返回类（将ok 和 error 封装到一个工具类）
         return ResultUtils.success(medicalRecordDtos);
     }
@@ -267,12 +264,19 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     @Override
     public BaseResponse<MedicalRecordDto> createJudgeDiagnosis(int id) {
         // 获取当前用户
-        DoctorDto doctor = (DoctorDto)Repo.get();
+        DoctorDto doctor = (DoctorDto) RepoD.get();
         QueryWrapper<MedicalRecord> medicalRecordQW = new QueryWrapper<>();
         medicalRecordQW
                 .eq("Doctor_Id", doctor.getId())
-                .eq("Patient_Id", id).select("Id", "DiagnosisPlan", "Department", "Subspecialty", "Cost", "Prescription", "Patient_Id", "Doctor_Id").getEntity();
+                .eq("Patient_Id", id).select("Id", "DiagnosisPlan", "Department", "Subspecialty", "Cost", "Prescription", "Patient_Id", "Doctor_Id")
+                .eq("Sign", "等待中")
+                .getEntity();
         MedicalRecord medicalRecord = medicalRecordMapper.selectOne(medicalRecordQW);
+        medicalRecord.setSign("已接诊");
+        int i = medicalRecordMapper.updateById(medicalRecord);
+        if( i == 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建失败");
+        }
         if(medicalRecord == null){
            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建失败");
             //return ResultUtils.error(ErrorCode.SYSTEM_ERROR,"创建失败");
@@ -303,7 +307,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
     @Override
     @Transactional
     public BaseResponse<MedicalRecordDto> submitMedicalRecord(MedicalRecordForm medicalRecordForm,HttpServletRequest request) {
-        System.out.println(request.getMethod());
+        //System.out.println(request.getMethod());
         // 0. 校验俩参数（处方和诊断）
         if(medicalRecordForm.getPrescription() == null || medicalRecordForm.getDiagnosisPlan() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请填写完整");
@@ -320,7 +324,7 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         // 2. 进行药房药品的加减和计算总费用
         String prescription = medicalRecordForm.getPrescription();
         // 2.1 使用 split 方法切割字符串
-        String[] stringArrays = prescription.split("\\r");
+        String[] stringArrays = prescription.split("\\n");
         // 2.2 药品库存减一操作
         // todo 默认医生所选的药品是1个
         Arrays.stream(stringArrays).forEach(this::subtractionDrug);
@@ -330,6 +334,8 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         for (int i = 0; i < count; i++) {
             price = price.add(getCost(stringArrays[i]));
         }
+        DoctorDto doctorDto = RepoD.get();
+        price = price.add(doctorDto.getCost());
         medicalRecord.setCost(price);
         medicalRecord.setSign("已完成");
         // 3. 补充数据
@@ -368,22 +374,34 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
      * 找到对应的药品进行数量减一
      * @param str
      */
+    @Transactional
     public void subtractionDrug(String str){
         // 找到指定药品
         UpdateWrapper<Drug> drugUpdateWrapper = new UpdateWrapper<>();
         QueryWrapper<Drug> drugQueryWrapper = new QueryWrapper<>();
+        // 不是模糊匹配
         drugQueryWrapper.eq("DrugName",str);
         Drug drug = drugMapper.selectOne(drugQueryWrapper);
-        // 查询该药品是否有库存
+        // 是否有该药品
         if(drug == null){
             // 未查找到
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"未查找到药品");
+        }
+        // 查询该药品是否有库存
+        if(drug.getCount() < 1){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"药品不足");
         }
         // 减一操作
         drugUpdateWrapper.eq("DrugName",str).setSql("Count = Count - 1");
         // 更新数据库
         drugMapper.update(drug,drugUpdateWrapper);
     }
+
+    /**
+     * 药品获取费用
+     * @param str
+     * @return
+     */
     public BigDecimal getCost(String str){
         // 找到指定药品
         QueryWrapper<Drug> drugQueryWrapper = new QueryWrapper<>();
@@ -397,15 +415,50 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         return drug.getPrice();
     }
 
-
-
     @Override
-    public BaseResponse<List<Drug>> queryDrugList(String drugName) {
-        if(drugName == null){
-            // 默认查询所有药品
-            return new BaseResponse<>(200,drugService.list(),"查询成功");
+    public BaseResponse<List<Drug>> queryDrugList(String drugName,String drugType) {
+        Optional<String> drugNameOptional = Optional.ofNullable(drugName);
+        Optional<String> drugTypeOptional = Optional.ofNullable(drugType);
+        // 药品类型查询
+//        if(!drugNameOptional.isPresent() || drugTypeOptional.isPresent()){
+//            // 默认查询所有药品
+//            return new BaseResponse<>(0,drugService.drugList(drugType),"查询成功");
+//            //return ResultUtils.success(drugMapper.selectList(null),"查询成功");
+//        }
+//        // 药品名称查询
+//        if(drugNameOptional.isPresent() || !drugTypeOptional.isPresent()){
+//            // 默认查询所有药品
+//            QueryWrapper<Drug> drugQW = new QueryWrapper<>();
+//            // 模糊查询
+//            drugQW.like("DrugName",drugName);
+//            List<Drug> drugs = drugMapper.selectList(drugQW);
+//            List<Drug> sortDrugs = drugs.stream()
+//                    .sorted(Comparator.comparingInt(Drug::getCount).reversed()) // 从小到大
+//                    .collect(Collectors.toList());
+//            if(sortDrugs.size() <= 0 || sortDrugs.isEmpty()){
+//                // 未查找到
+//                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+//                //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR);
+//            }
+            if(!drugNameOptional.isPresent() && !drugTypeOptional.isPresent()){
+                return ResultUtils.success(drugService.list());
+            }else if(drugNameOptional.isPresent() && drugName.equals("")){
+
+                return new BaseResponse<>(0,drugService.drugList(drugType),"查询成功");
+            }
+        return queryDrugName(drugName);
             //return ResultUtils.success(drugMapper.selectList(null),"查询成功");
-        }
+        // 默认查询所有药品
+
+    }
+
+    /**
+     * 药名查询
+     * @param drugName
+     * @return
+     */
+    public BaseResponse<List<Drug>> queryDrugName(String drugName){
+        // 默认查询所有药品
         QueryWrapper<Drug> drugQW = new QueryWrapper<>();
         // 模糊查询
         drugQW.like("DrugName",drugName);
@@ -419,8 +472,8 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
             //return ResultUtils.error(ErrorCode.NOT_FOUND_ERROR);
         }
         return ResultUtils.success(sortDrugs);
+        //return ResultUtils.success(drugMapper.selectList(null),"查询成功");
     }
-
     @Override
     public BaseResponse<DoctorDto> LoginTest(String account, String password, HttpServletRequest request) {
         // 0. 校验账号密码基本规范
@@ -458,13 +511,15 @@ public class DoctorServiceImpl extends ServiceImpl<DoctorMapper, Doctor> impleme
         saftyDoctor.setVacancy(doctor.getVacancy());
         saftyDoctor.setAccountStatus(doctor.getAccountStatus());
         saftyDoctor.setLevel(doctor.getLevel());
+        saftyDoctor.setAvatarUrl(doctor.getAvatarUrl());
+        saftyDoctor.setCost(doctor.getCost());
         // 4. 服务端（后台）创建session存储（TODO 改为Redis存储）
         // 根据session的生命周期 同一个sessionKey减少管理过多的session
         request.getSession().setAttribute(USER_LOGIN_KEY ,saftyDoctor);
         DoctorDto doctorDto = BeanUtil.copyProperties(saftyDoctor, DoctorDto.class);
         // 5. ThreadLocal存储
 //        UserHolder.saveUser(doctorDto);
-        Repo.save(doctorDto);
+        RepoD.save(doctorDto);
         log.info("登录成功");
         // 6. 返回登录成功
         return ResultUtils.success(doctorDto);

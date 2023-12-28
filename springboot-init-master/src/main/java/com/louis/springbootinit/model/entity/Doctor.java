@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.apache.poi.hpsf.Decimal;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -75,4 +77,7 @@ public class Doctor implements Serializable {
      * 医生职称
      */
     private String Level;
+
+    private String AvatarUrl;
+    private BigDecimal Cost;
 }

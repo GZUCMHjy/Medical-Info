@@ -57,11 +57,6 @@ public class UserController {
         return patientService.LoginTest1(account,password,request);
     }
 
-    /**
-     * 医生登录
-     * @param loginForm 登录表单
-     * @return
-     */
 //    @ApiOperation("医生登录")
 //    @PostMapping("/doctor/login")
 //    public BaseResponse<DoctorDto> doctorLogin(LoginForm loginForm, HttpServletRequest request) {

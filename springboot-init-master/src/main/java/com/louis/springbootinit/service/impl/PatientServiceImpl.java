@@ -22,7 +22,8 @@ import com.louis.springbootinit.model.vo.patient.PatientEditProfileVo;
 import com.louis.springbootinit.model.vo.user.LoginForm;
 import com.louis.springbootinit.model.vo.user.RegisterForm;
 import com.louis.springbootinit.service.PatientService;
-import com.louis.springbootinit.utils.Repo;
+import com.louis.springbootinit.utils.RepoD;
+import com.louis.springbootinit.utils.RepoP;
 import com.louis.springbootinit.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,8 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.louis.springbootinit.constant.CommonConstant.USER_LOGIN_KEY;
 
 /**
  * @author louis
@@ -51,6 +50,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     private MedicalRecordMapper medicalRecordMapper;
     @Resource
     private DoctorMapper doctorMapper;
+
 
 
     /**
@@ -156,7 +156,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         long res = patientMapper.insert(addPatient);
 
         log.info("注册成功");
-        return new BaseResponse<>(0,null,"注册成功");
+        return ResultUtils.success("注册成功");
     }
 
     /**
@@ -173,7 +173,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         //String avatarUrl = patient.getAvatarUrl();
         String gender = patient.getGender();
         // 1. 获取当前用户信息
-        PatientDto patientDto = (PatientDto) Repo.get();
+        PatientDto patientDto = (PatientDto) RepoP.get();
         Integer patientId = patientDto.getId();
         // 2. 修改目标对象
         Patient targetPatient = query().eq("Id", patientId).one();
@@ -188,9 +188,9 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         PatientDto res = BeanUtil.copyProperties(targetPatient, PatientDto.class);
         // 4. 更新Session值
 //        UserHolder.saveUser(res);
-        Repo.save(res);
+        RepoP.save(res);
         // 5. 返回修改结果
-        return ResultUtils.success(res);
+        return ResultUtils.success(patientDto);
     }
 
     /**
@@ -218,7 +218,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
     @Transactional
     public BaseResponse<MedicalRecordDto> submitAppointment(MedicalRecordVo medicalRecordVo) {
         // 0. 校验患者是否重复挂号
-        PatientDto patient = (PatientDto)Repo.get();
+        PatientDto patient = (PatientDto) RepoP.get();
         Integer patientId = patient.getId();
         if (query().eq("Id",patientId).one().getPatientStatus() == 0) {
             // 已挂号
@@ -287,7 +287,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
     @Override
     public BaseResponse<MedicalRecordDto> appintmentByPatient(int id) {
-        PatientDto patient = (PatientDto)Repo.get();
+        PatientDto patient = (PatientDto) RepoP.get();
         Integer patientId = patient.getId();
         QueryWrapper<Doctor> doctorQueryWrapper = new QueryWrapper<>();
         doctorQueryWrapper.eq("Id",id);
@@ -309,11 +309,12 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
 
     @Override
     public BaseResponse<List<Registered>> showRegisteredList() {
-        PatientDto patient = (PatientDto)Repo.get();
+        PatientDto patient = (PatientDto) RepoP.get();
+       // if((PatientDto)Repo.get() )
         Integer patientId = patient.getId();
         List<MedicalRecord> medicalRecords =
                 medicalRecordMapper.selectList(new QueryWrapper<MedicalRecord>()
-                        .eq("Patient_Id", patientId));// 查看挂号历史记录（已完成就诊的历史记录）
+                        .eq("Patient_Id", patientId));// 查看挂号历史记录（已完成和未完成就诊的历史记录）
         if(medicalRecords == null || medicalRecords.isEmpty()){
             return new BaseResponse<>(ErrorCode.SYSTEM_ERROR);
             //return ResultUtils.error(ErrorCode.SYSTEM_ERROR,"进入无患者挂号");
@@ -325,7 +326,7 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
             MedicalRecord medicalRecord = medicalRecords.get(i);
             int patientID = medicalRecord.getPatient_Id();
             Patient one = query().eq("Id", patientID).one();
-            if(one.getPatientStatus() == 4){
+            if(one.getPatientStatus() == 4 || one.getPatientStatus() == 0){
                 Registered registered = new Registered();
                 registered.setMedicalRecordId(medicalRecord.getId());
                 registered.setDoctorName(medicalRecord.getDoctorName());
@@ -334,6 +335,9 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
                 registered.setPatientName(medicalRecord.getPatientName());
                 registered.setCost(medicalRecord.getCost());
                 registered.setAppointTime(medicalRecord.getAppointTime());
+                registered.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());
+                registered.setPrescription(medicalRecord.getPrescription());
+                registered.setSign(medicalRecord.getSign());
                 registereds.add(registered);
             }
         }
@@ -391,12 +395,60 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
         PatientDto patientDto = BeanUtil.copyProperties(saftyPatient, PatientDto.class);
         // 5. ThreadLocal存储
         //UserHolder.saveUser(patientDto);
-        Repo.save(patientDto);
+        RepoP.save(patientDto);
         if(loginPatient.getName() == null || loginPatient.getAge() == null || loginPatient.getGender() == ""){
             return ResultUtils.success(patientDto,"登录成功，请完善个人信息");
             //return new BaseResponse<>(0,patientDto,"登录成功，请完善个人信息");
         }
         // 6. 返回登陆成功
         return ResultUtils.success(patientDto);
+    }
+
+    @Override
+    @Transactional
+    public BaseResponse<Registered> quitAppointment(int id) {
+        // 诊断单id
+        QueryWrapper<MedicalRecord> mdQW = new QueryWrapper<>();
+        mdQW.eq("Id",id);
+        MedicalRecord medicalRecord = medicalRecordMapper.selectOne(mdQW);
+        if(medicalRecord == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数异常");
+        }
+        if(medicalRecord.getSign().equals("已接诊")){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"已被接诊,无法退号");
+        }
+        if(medicalRecord.getSign().equals("已取消")){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"已取消,无法重复退号");
+        }
+        medicalRecord.setSign("已取消");
+        int i = medicalRecordMapper.updateById(medicalRecord);
+        if( i==0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"取消失败");
+        }
+        QueryWrapper<Doctor> doctorQueryWrapper = new QueryWrapper<>();
+        doctorQueryWrapper.eq("Id",medicalRecord.getDoctor_Id());
+        Doctor doctor = doctorMapper.selectOne(doctorQueryWrapper);
+        if(doctor == null){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"医生不存在");
+        }
+        UpdateWrapper<Doctor> doctorUpdateWrapper = new UpdateWrapper<>();
+        // 返号
+        doctorUpdateWrapper.eq("Id",medicalRecord.getDoctor_Id()).setSql("Vacancy = Vacancy + 1");
+        int update = doctorMapper.update(doctor, doctorUpdateWrapper);
+        if( update == 0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"退号失败");
+        }
+        Registered registered = new Registered();
+        registered.setMedicalRecordId(medicalRecord.getId());
+        registered.setDoctorName(medicalRecord.getDoctorName());
+        registered.setDepartment(medicalRecord.getDepartment());
+        registered.setSubspecialty(medicalRecord.getSubspecialty());
+        registered.setPatientName(medicalRecord.getPatientName());
+        registered.setCost(medicalRecord.getCost());
+        registered.setAppointTime(medicalRecord.getAppointTime());
+        registered.setDiagnosisPlan(medicalRecord.getDiagnosisPlan());
+        registered.setPrescription(medicalRecord.getPrescription());
+        registered.setSign(medicalRecord.getSign());
+        return ResultUtils.success(registered);
     }
 }

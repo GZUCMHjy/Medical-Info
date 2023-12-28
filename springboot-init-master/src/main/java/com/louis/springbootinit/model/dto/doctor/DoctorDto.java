@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
+import org.apache.poi.hpsf.Decimal;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -51,4 +53,7 @@ public class DoctorDto  implements Serializable {
      * 医生职称
      */
     private String Level;
+
+    private String AvatarUrl;
+    private BigDecimal Cost;
 }

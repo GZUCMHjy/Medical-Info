@@ -15,9 +15,13 @@
         <result property="Account" column="Account" jdbcType="VARCHAR"/>
         <result property="Password" column="Password" jdbcType="VARCHAR"/>
         <result property="Level" column="Level" jdbcType="VARCHAR"/>
+        <result property="AvatarUrl" column="AvatarUrl" jdbcType="VARCHAR"/>
+        <result property="Cost" column="Cost" jdbcType="DECIMAL"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        Id,Name,Department,CreateAt,UpdateAt,Expertise,Subspecialty,Vacancy,Account,Password,Level
+        Id,Name,Department,CreateAt,
+            UpdateAt,Expertise,Subspecialty,
+            Vacancy,Account,Password,Level,AvatarUrl
     </sql>
 </mapper>
